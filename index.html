@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="半两闲">
+<meta name="theme-color" content="#d4d9d4">
+<meta name="mobile-web-app-capable" content="yes">
+<title>半两闲 · 读写工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%238ba89b'/%3E%3Ctext x='50' y='58' font-size='26' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E5%8D%8A%E4%B8%A4%E9%97%B2%3C/text%3E%3C/svg%3E">
+<style>
+/* ===== 全局变量 - 莫兰迪配色 柔和蓝绿灰调 ===== */
+:root{
+  --c-bg:#e8ece8;
+  --c-bg-soft:#dde5dd;
+  --c-blue-50:#e3e9e6;
+  --c-blue-100:#d1dbd5;
+  --c-blue-200:#bcc9c3;
+  --c-blue-300:#9bada5;
+  --c-blue-500:#7b9489;
+  --c-blue-600:#5f7a6e;
+  --c-green-50:#e5ebe5;
+  --c-green-100:#d3ded3;
+  --c-green-200:#bccdb8;
+  --c-green-300:#99b296;
+  --c-green-500:#7a9a76;
+  --c-green-600:#607d5d;
+  --c-teal:#8ba89b;
+  --c-mint:#9ab5a9;
+  --c-card:#f5f6f3;
+  --c-text:#4a504c;
+  --c-text-light:#6e7771;
+  --c-text-muted:#939c96;
+  --c-border:#d5dbd6;
+  --c-border-soft:#e2e8e3;
+  --c-shadow:0 2px 8px rgba(95,122,110,0.06),0 1px 3px rgba(0,0,0,0.03);
+  --c-shadow-hover:0 6px 20px rgba(95,122,110,0.10),0 2px 6px rgba(0,0,0,0.04);
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-xs:8px;
+  --nav-w:84px;
+  --nav-w-active:260px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:linear-gradient(135deg,#e8ece8 0%,#dde5dd 100%);
+  color:var(--c-text);
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;outline:none;border:none;background:none;}
+button{cursor:pointer;}
+input,textarea{width:100%;}
+ul{list-style:none;}
+
+/* ===== 布局 ===== */
+.app{display:flex;height:100dvh;height:100vh;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);}
+
+/* 左侧导航 */
+.sidebar{
+  width:var(--nav-w);
+  flex-shrink:0;
+  background:linear-gradient(180deg,#dde5dd 0%,#d8e1d8 100%);
+  border-right:1px solid var(--c-border-soft);
+  display:flex;
+  flex-direction:column;
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  position:relative;
+  z-index:20;
+}
+.sidebar.expanded{width:var(--nav-w-active);}
+.brand{
+  padding:18px 14px 14px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.5);
+  min-height:68px;
+  flex-shrink:0;
+}
+.brand-logo{
+  width:52px;height:52px;border-radius:12px;
+  background:linear-gradient(135deg,#8ba89b,#7b9489);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:11px;font-weight:700;
+  flex-shrink:0;
+  box-shadow:0 3px 8px rgba(95,122,110,.3);
+}
+.brand-text{white-space:nowrap;overflow:hidden;}
+.brand-title{font-size:17px;font-weight:600;color:#3d4540;letter-spacing:.5px;}
+.brand-sub{font-size:11px;color:var(--c-text-muted);margin-top:2px;}
+
+.nav-list{flex:1;overflow-y:auto;padding:10px 8px;-webkit-overflow-scrolling:touch;}
+.nav-list::-webkit-scrollbar{width:0;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px;border-radius:var(--radius-sm);
+  color:var(--c-text-light);
+  margin-bottom:4px;
+  transition:all .2s;
+  white-space:nowrap;overflow:hidden;
+  position:relative;
+}
+.nav-item .nav-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:18px;
+  background:rgba(255,255,255,.6);
+  transition:all .2s;
+}
+.nav-item .nav-label{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;}
+.nav-item.active{background:rgba(255,255,255,.85);color:#3d4540;font-weight:500;box-shadow:0 2px 8px rgba(95,122,110,.08);}
+.nav-item.active .nav-icon{background:linear-gradient(135deg,#bcc9c3,#bccdb8);color:#3d4540;}
+.nav-item:active{background:rgba(255,255,255,.6);}
+.nav-item.active::before{
+  content:"";position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;border-radius:3px;background:linear-gradient(180deg,#8ba89b,#7a9a76);
+}
+
+.sidebar-footer{
+  padding:10px 8px;border-top:1px solid rgba(255,255,255,.5);
+  flex-shrink:0;display:flex;flex-direction:column;
+}
+.nav-export{padding:10px 12px;gap:12px;margin-bottom:4px;color:var(--c-text-light);font-size:13px;white-space:nowrap;overflow:hidden;}
+.nav-export .nav-icon{background:rgba(255,255,255,.5);}
+.nav-export:active{background:rgba(255,255,255,.5);}
+.nav-export::before{display:none !important;}
+.nav-toggle{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:10px;border-radius:var(--radius-sm);
+  color:var(--c-text-muted);font-size:13px;
+}
+.nav-toggle:active{background:rgba(255,255,255,.5);}
+.nav-toggle-icon{transition:transform .3s;font-size:16px;}
+.sidebar.expanded .nav-toggle-icon{transform:rotate(180deg);}
+
+/* 右侧内容 */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;}
+.header{
+  padding:14px 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(255,255,255,.7);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--c-border-soft);
+  flex-shrink:0;
+  z-index:5;
+}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.header-menu-btn{
+  display:none;width:36px;height:36px;border-radius:10px;
+  align-items:center;justify-content:center;
+  background:rgba(255,255,255,.6);color:var(--c-text);
+  font-size:20px;flex-shrink:0;
+}
+.header h1{font-size:18px;font-weight:600;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-date{font-size:12px;color:var(--c-text-muted);margin-top:2px;}
+.header-right{display:flex;gap:8px;flex-shrink:0;}
+.header-tag{
+  padding:4px 10px;border-radius:20px;font-size:11px;
+  background:var(--c-green-100);color:#4a5e4d;
+}
+
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 24px;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--c-blue-200);border-radius:4px;}
+
+/* ===== 卡片 ===== */
+.card{
+  background:var(--c-card);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--c-shadow);
+  border:1px solid rgba(229,231,235,.5);
+}
+.card-title{
+  font-size:15px;font-weight:600;color:#1f2937;
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#8ba89b,#7a9a76);}
+
+/* ===== 进度条 ===== */
+.progress-wrap{margin-bottom:14px;}
+.progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;}
+.progress-info .label{color:var(--c-text-light);}
+.progress-info .value{font-weight:600;color:#1f2937;}
+.progress-info .value .num{color:#5f7a6e;font-size:16px;}
+.progress-bar{height:8px;background:var(--c-blue-50);border-radius:8px;overflow:hidden;}
+.progress-fill{
+  height:100%;border-radius:8px;
+  background:linear-gradient(90deg,#8ba89b,#7a9a76);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ===== 日期切换 ===== */
+.date-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.date-nav-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--c-card);border:1px solid var(--c-border-soft);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-light);font-size:18px;
+  box-shadow:var(--c-shadow);
+}
+.date-nav-btn:active{background:var(--c-blue-50);}
+.date-nav-btn:disabled{opacity:.4;}
+.date-display{
+  flex:1;text-align:center;padding:8px;border-radius:10px;
+  background:var(--c-card);border:1px solid var(--c-border-soft);
+  box-shadow:var(--c-shadow);
+}
+.date-display .date-text{font-size:14px;font-weight:600;color:#1f2937;}
+.date-display .date-sub{font-size:11px;color:var(--c-text-muted);}
+.date-today-btn{
+  padding:6px 12px;border-radius:8px;font-size:12px;
+  background:var(--c-blue-100);color:var(--c-blue-600);
+  white-space:nowrap;
+}
+
+/* ===== 任务清单 ===== */
+.task-list{margin-bottom:12px;}
+.task-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;border-radius:var(--radius-sm);
+  background:var(--c-blue-50);margin-bottom:8px;
+  transition:all .2s;
+  border:1px solid transparent;
+}
+.task-item:active{background:var(--c-blue-100);}
+.task-item.done{background:var(--c-green-50);opacity:.8;}
+.task-item.done .task-text{text-decoration:line-through;color:var(--c-text-muted);}
+.task-checkbox{
+  width:24px;height:24px;border-radius:7px;
+  border:2px solid var(--c-blue-300);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:#fff;transition:all .2s;
+}
+.task-item.done .task-checkbox{
+  background:linear-gradient(135deg,#607d5d,#7a9a76);
+  border-color:#607d5d;color:#fff;
+}
+.task-checkbox svg{width:14px;height:14px;opacity:0;transition:opacity .2s;}
+.task-item.done .task-checkbox svg{opacity:1;}
+.task-text{flex:1;font-size:14px;line-height:1.5;word-break:break-word;}
+.task-del{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-muted);font-size:16px;flex-shrink:0;
+  opacity:.5;
+}
+.task-del:active{background:rgba(180,120,120,.1);color:#b57373;opacity:1;}
+
+.task-add{display:flex;gap:8px;margin-top:8px;}
+.task-add input{
+  flex:1;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--c-blue-50);border:1px solid var(--c-border-soft);
+  font-size:14px;
+}
+.task-add input:focus{border-color:var(--c-blue-300);background:#fff;}
+.task-add button{
+  padding:0 16px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,#8ba89b,#5f7a6e);
+  color:#fff;font-size:14px;font-weight:500;
+  white-space:nowrap;
+}
+.task-add button:active{transform:scale(.96);}
+
+/* ===== 统计卡 ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.stat-mini{
+  background:var(--c-card);border-radius:var(--radius-sm);padding:12px 8px;
+  text-align:center;box-shadow:var(--c-shadow);
+  border:1px solid rgba(229,231,235,.4);
+}
+.stat-mini .num{font-size:22px;font-weight:700;color:#5f7a6e;line-height:1.2;}
+.stat-mini .num.green{color:#607d5d;}
+.stat-mini .label{font-size:11px;color:var(--c-text-muted);margin-top:4px;}
+
+/* ===== 输入区 ===== */
+.input-group{margin-bottom:12px;}
+.input-group label{display:block;font-size:13px;color:var(--c-text-light);margin-bottom:6px;font-weight:500;}
+.input-group input,.input-group textarea,.input-group select{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--c-blue-50);border:1px solid var(--c-border-soft);
+  font-size:14px;
+}
+.input-group input:focus,.input-group textarea:focus,.input-group select:focus{
+  border-color:var(--c-blue-300);background:#fff;
+}
+.input-group textarea{resize:vertical;min-height:80px;line-height:1.6;}
+
+.btn{
+  padding:10px 16px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;transition:all .2s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#8ba89b,#5f7a6e);color:#fff;
+  box-shadow:0 3px 8px rgba(95,122,110,.2);
+}
+.btn-primary:active{transform:scale(.97);}
+.btn-mint{
+  background:linear-gradient(135deg,#99b296,#607d5d);color:#fff;
+  box-shadow:0 3px 8px rgba(96,125,93,.2);
+}
+.btn-mint:active{transform:scale(.97);}
+.btn-ghost{
+  background:var(--c-blue-50);color:var(--c-blue-600);
+  border:1px solid var(--c-blue-100);
+}
+.btn-ghost:active{background:var(--c-blue-100);}
+.btn-block{width:100%;}
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+.btn-row .btn{flex:1;}
+
+/* ===== 素材库 ===== */
+.material-item{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:10px;box-shadow:var(--c-shadow);
+  border-left:3px solid var(--c-green-300);
+}
+.material-item .m-quote{
+  font-size:14px;line-height:1.7;color:#1f2937;
+  font-style:italic;margin-bottom:8px;
+  padding-left:10px;border-left:2px solid var(--c-green-200);
+  white-space:pre-wrap;word-break:break-word;
+}
+.material-item .m-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;font-size:12px;}
+.material-item .m-tag{
+  padding:2px 8px;border-radius:10px;font-size:11px;
+  background:var(--c-blue-100);color:var(--c-blue-600);
+}
+.material-item .m-tag.green{background:var(--c-green-100);color:#4a5e4d;}
+.material-item .m-source{font-size:12px;color:var(--c-text-muted);}
+.material-item .m-inspire{
+  font-size:13px;color:var(--c-text-light);margin-top:6px;
+  padding:8px 10px;background:var(--c-green-50);border-radius:8px;
+  line-height:1.6;
+}
+.material-item .m-del{
+  float:right;width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-muted);font-size:16px;
+}
+.material-item .m-del:active{color:#b57373;}
+
+.hot-card{
+  background:linear-gradient(135deg,#fff,var(--c-blue-50));
+  border-radius:var(--radius);padding:14px;margin-bottom:10px;
+  box-shadow:var(--c-shadow);border:1px solid rgba(191,219,254,.4);
+}
+.hot-card .h-title{font-size:14px;font-weight:600;color:#1f2937;margin-bottom:6px;line-height:1.5;}
+.hot-card .h-author{font-size:12px;color:var(--c-blue-600);margin-bottom:6px;}
+.hot-card .h-excerpt{font-size:13px;color:var(--c-text-light);line-height:1.7;margin-bottom:8px;padding:8px 10px;background:var(--c-blue-50);border-radius:8px;}
+.hot-card .h-inspire{font-size:12px;color:#4a5e4d;padding:6px 10px;background:var(--c-green-50);border-radius:8px;line-height:1.6;}
+
+/* ===== 仿写 ===== */
+.imitate-item{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:12px;box-shadow:var(--c-shadow);
+}
+.imitate-item .im-section{margin-bottom:12px;}
+.imitate-item .im-label{
+  font-size:12px;font-weight:600;margin-bottom:6px;
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:10px;
+}
+.imitate-item .im-label.original{background:var(--c-blue-100);color:var(--c-blue-600);}
+.imitate-item .im-label.mine{background:var(--c-green-100);color:#4a5e4d;}
+.imitate-item .im-text{
+  font-size:14px;line-height:1.8;padding:10px 12px;border-radius:8px;
+  white-space:pre-wrap;word-break:break-word;
+}
+.imitate-item .im-text.original{background:var(--c-blue-50);color:#1f2937;font-style:italic;}
+.imitate-item .im-text.mine{background:var(--c-green-50);color:#1f2937;}
+.imitate-item .im-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.imitate-item .im-tag{
+  padding:4px 10px;border-radius:12px;font-size:12px;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.imitate-item .im-tag.todo{background:#f5efe0;color:#8b7355;}
+.imitate-item .im-tag.done{background:var(--c-green-100);color:#4a5e4d;}
+.imitate-item .im-actions{display:flex;gap:6px;margin-top:10px;}
+.imitate-item .im-actions button{
+  padding:5px 10px;border-radius:8px;font-size:12px;
+  background:var(--c-blue-50);color:var(--c-blue-600);
+}
+.imitate-item .im-actions button:active{background:var(--c-blue-100);}
+.imitate-item .im-actions .del{color:var(--c-text-muted);margin-left:auto;}
+
+/* ===== 复盘 ===== */
+.review-item{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:12px;box-shadow:var(--c-shadow);
+  border-top:3px solid var(--c-blue-300);
+}
+.review-item .r-date{font-size:12px;color:var(--c-text-muted);margin-bottom:8px;}
+.review-item .r-link{
+  font-size:13px;color:var(--c-blue-600);margin-bottom:8px;
+  word-break:break-all;
+}
+.review-item .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.review-item .r-stat{text-align:center;padding:8px 4px;background:var(--c-blue-50);border-radius:8px;}
+.review-item .r-stat .num{font-size:16px;font-weight:700;color:#5f7a6e;}
+.review-item .r-stat .label{font-size:10px;color:var(--c-text-muted);margin-top:2px;}
+.review-item .r-diagnosis{padding:10px 12px;background:var(--c-green-50);border-radius:8px;border-left:3px solid var(--c-green-300);}
+.review-item .r-diagnosis .d-title{font-size:12px;font-weight:600;color:#4a5e4d;margin-bottom:4px;}
+.review-item .r-diagnosis .d-text{font-size:13px;color:var(--c-text);line-height:1.7;}
+
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.input-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;}
+
+/* ===== 阅读清单 ===== */
+.book-item{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:10px;box-shadow:var(--c-shadow);
+  display:flex;gap:12px;
+}
+.book-cover{
+  width:50px;height:70px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,#bcc9c3,#bccdb8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:#fff;
+}
+.book-info{flex:1;min-width:0;}
+.book-name{font-size:14px;font-weight:600;color:#3d4540;margin-bottom:4px;word-break:break-word;}
+.book-meta{font-size:12px;color:var(--c-text-muted);margin-bottom:6px;}
+.book-progress{margin-bottom:6px;}
+.book-feeling{
+  font-size:13px;color:var(--c-text-light);line-height:1.6;
+  padding:8px 10px;background:var(--c-green-50);border-radius:8px;
+  margin-bottom:6px;font-style:italic;
+}
+.book-actions{display:flex;gap:6px;}
+.book-actions button{
+  padding:4px 10px;border-radius:8px;font-size:12px;
+  background:var(--c-blue-50);color:var(--c-blue-600);
+}
+.book-actions .del{color:var(--c-text-muted);margin-left:auto;}
+
+.reading-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+
+/* ===== 空状态 ===== */
+.empty{
+  text-align:center;padding:40px 20px;color:var(--c-text-muted);
+}
+.empty .icon{font-size:40px;margin-bottom:10px;opacity:.5;}
+.empty .text{font-size:13px;}
+
+/* ===== 选题研究模块 ===== */
+.search-bar{display:flex;gap:8px;margin-bottom:12px;}
+.search-bar input{flex:1;padding:10px 14px;border-radius:24px;background:var(--c-card);border:1px solid var(--c-border-soft);font-size:14px;box-shadow:var(--c-shadow);}
+.search-bar input:focus{border-color:var(--c-blue-300);background:#fff;}
+.search-bar button{padding:0 18px;border-radius:24px;background:linear-gradient(135deg,#8ba89b,#5f7a6e);color:#fff;font-size:14px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.search-bar button:active{transform:scale(.96);}
+.search-hints{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.search-hint{padding:5px 12px;border-radius:16px;font-size:12px;background:var(--c-blue-50);color:var(--c-blue-600);border:1px solid var(--c-blue-100);white-space:nowrap;}
+.search-hint:active{background:var(--c-blue-100);}
+
+/* 话题卡片 */
+.topic-card{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:10px;box-shadow:var(--c-shadow);
+  border-left:3px solid var(--c-teal);cursor:pointer;
+  transition:all .2s;
+}
+.topic-card:active{box-shadow:var(--c-shadow-hover);transform:translateY(-1px);}
+.topic-card .tc-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.topic-card .tc-title{font-size:14px;font-weight:600;color:#3d4540;line-height:1.5;flex:1;}
+.topic-card .tc-stats{display:flex;gap:10px;font-size:11px;color:var(--c-text-muted);flex-shrink:0;text-align:right;}
+.topic-card .tc-stats span{display:block;line-height:1.4;}
+.topic-card .tc-stats .hot{color:#b57373;font-weight:600;}
+.topic-card .tc-preview{font-size:12px;color:var(--c-text-light);line-height:1.6;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.topic-card .tc-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.topic-card .tc-tag{padding:2px 8px;border-radius:10px;font-size:10px;background:var(--c-green-50);color:#4a5e4d;}
+.topic-card .tc-expand{text-align:center;font-size:12px;color:var(--c-text-muted);padding-top:4px;}
+
+/* 深度报告弹层 */
+.report-panel{
+  background:var(--c-card);border-radius:var(--radius);padding:0;
+  margin-bottom:12px;box-shadow:var(--c-shadow-hover);
+  border:1px solid var(--c-border-soft);overflow:hidden;
+  max-height:0;opacity:0;transition:max-height .5s ease,opacity .3s,padding .3s;
+}
+.report-panel.open{max-height:3000px;opacity:1;padding:18px;}
+.report-panel .rp-title{font-size:15px;font-weight:600;color:#3d4540;margin-bottom:4px;}
+.report-panel .rp-subtitle{font-size:12px;color:var(--c-text-muted);margin-bottom:16px;}
+.report-section{margin-bottom:16px;}
+.report-section h4{
+  font-size:13px;font-weight:600;color:var(--c-blue-600);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.report-section h4::before{content:'';display:inline-block;width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,#8ba89b,#7a9a76);}
+.report-section .rs-content{
+  font-size:13px;line-height:1.8;color:var(--c-text);
+  padding:10px 12px;background:var(--c-blue-50);border-radius:var(--radius-sm);
+}
+.report-section .rs-content ul{margin:4px 0;padding-left:18px;}
+.report-section .rs-content li{margin-bottom:4px;list-style-type:disc;}
+.report-section .rs-content .highlight{color:var(--c-blue-600);font-weight:500;}
+
+/* 文案结构卡片 */
+.structure-block{
+  background:var(--c-green-50);border-radius:var(--radius-sm);padding:12px;
+  margin-bottom:8px;border-left:3px solid var(--c-green-300);
+}
+.structure-block .s-label{font-size:11px;font-weight:600;color:#4a5e4d;margin-bottom:4px;}
+.structure-block .s-text{font-size:12px;color:var(--c-text);line-height:1.7;}
+
+/* 加载动画 */
+.search-loading{text-align:center;padding:30px;color:var(--c-text-muted);font-size:13px;}
+.search-loading .spinner{
+  display:inline-block;width:24px;height:24px;border:3px solid var(--c-border-soft);
+  border-top-color:var(--c-blue-500);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* 报告关闭按钮 */
+.rp-close{
+  float:right;width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-muted);font-size:16px;background:var(--c-blue-50);
+}
+.rp-close:active{background:var(--c-blue-100);color:#b57373;}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
+  background:rgba(31,41,55,.92);color:#fff;padding:10px 20px;border-radius:24px;
+  font-size:13px;z-index:9999;transition:transform .3s;
+  backdrop-filter:blur(10px);max-width:90%;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ===== 导出提醒弹窗 ===== */
+.reminder-modal{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.reminder-modal.show{opacity:1;pointer-events:auto;}
+.reminder-body{
+  background:var(--c-card);border-radius:var(--radius);padding:24px 20px;
+  width:90%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,.15);
+  text-align:center;
+}
+.reminder-body h3{font-size:17px;color:#3d4540;margin-bottom:8px;}
+.reminder-body p{font-size:13px;color:var(--c-text-light);line-height:1.7;margin-bottom:16px;}
+.reminder-body .reminder-actions{display:flex;gap:8px;}
+.reminder-body .reminder-actions button{flex:1;}
+.reminder-body .reminder-actions .skip{background:var(--c-blue-50);color:var(--c-text-muted);padding:10px;border-radius:var(--radius-sm);font-size:13px;}
+.reminder-body .reminder-actions .do{background:linear-gradient(135deg,#8ba89b,#5f7a6e);color:#fff;padding:10px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;}
+.reminder-body .reminder-actions .do:active{transform:scale(.97);}
+.reminder-body .reminder-actions .later{background:var(--c-blue-100);color:var(--c-blue-600);padding:10px;border-radius:var(--radius-sm);font-size:13px;}
+
+/* ===== 遮罩 ===== */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:15;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.overlay.show{opacity:1;pointer-events:auto;}
+
+/* ===== 移动端适配 ===== */
+@media (max-width:768px){
+  :root{--nav-w:64px;--nav-w-active:240px;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;height:100dvh;height:100vh;z-index:30;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+  .sidebar.show{transform:translateX(0);}
+  .sidebar.expanded{width:var(--nav-w-active);}
+  .header-menu-btn{display:flex;}
+  .content{padding:12px 12px 20px;}
+  .card{padding:14px;}
+  .stats-grid{grid-template-columns:repeat(3,1fr);}
+  .input-row-4{grid-template-columns:repeat(2,1fr);}
+  .review-item .r-stats{grid-template-columns:repeat(4,1fr);}
+}
+
+@media (min-width:769px){
+  .sidebar{position:relative;}
+  .nav-toggle{display:none;}
+}
+
+/* 横屏优化 */
+@media (max-width:900px) and (orientation:landscape){
+  .content{padding:12px 16px 16px;}
+}
+
+/* 字体大小适配 */
+@media (max-width:360px){
+  body{font-size:14px;}
+  .stat-mini .num{font-size:18px;}
+  .review-item .r-stats{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 左侧导航 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">半两闲</div>
+      <div class="brand-text">
+        <div class="brand-title">半两闲</div>
+        <div class="brand-sub">读写工作台</div>
+      </div>
+    </div>
+    <nav class="nav-list" id="navList">
+      <div class="nav-item active" data-module="plan">
+        <div class="nav-icon">📋</div>
+        <span class="nav-label">每日读写计划</span>
+      </div>
+      <div class="nav-item" data-module="material">
+        <div class="nav-icon">✨</div>
+        <span class="nav-label">文笔素材库</span>
+      </div>
+      <div class="nav-item" data-module="imitate">
+        <div class="nav-icon">✍️</div>
+        <span class="nav-label">文笔仿写</span>
+      </div>
+      <div class="nav-item" data-module="review">
+        <div class="nav-icon">📊</div>
+        <span class="nav-label">内容复盘</span>
+      </div>
+      <div class="nav-item" data-module="reading">
+        <div class="nav-icon">📚</div>
+        <span class="nav-label">阅读清单</span>
+      </div>
+      <div class="nav-item" data-module="research">
+        <div class="nav-icon">🔍</div>
+        <span class="nav-label">选题研究</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item nav-export" id="exportBtn" style="width:100%;margin-bottom:4px;">
+        <div class="nav-icon">📥</div>
+        <span class="nav-label">导出 Markdown</span>
+      </button>
+      <button class="nav-item nav-export" id="exportReminderBtn" style="width:100%;">
+        <div class="nav-icon" id="reminderIcon">🔔</div>
+        <span class="nav-label" id="reminderLabel">每周导出提醒：开</span>
+      </button>
+      <button class="nav-toggle" id="navToggle" style="margin-top:4px;">
+        <span class="nav-toggle-icon">›</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- 右侧主内容 -->
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <button class="header-menu-btn" id="menuBtn">≡</button>
+        <div>
+          <h1 id="pageTitle">每日读写计划</h1>
+          <div class="header-date" id="headerDate"></div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-tag" id="headerTag">阅读 · 写作 · 成长</div>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <!-- 动态渲染 -->
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 导出提醒弹窗 -->
+<div class="reminder-modal" id="reminderModal">
+  <div class="reminder-body">
+    <h3>📝 每周导出提醒</h3>
+    <p id="reminderMsg">又是新的一周了！上次导出是 7 天前，建议现在导出一份 Markdown 备份，确保所有读写记录安全保存到本地。</p>
+    <div class="reminder-actions">
+      <button class="skip" id="reminderSkip">跳过</button>
+      <button class="do" id="reminderExport">立即导出</button>
+      <button class="later" id="reminderLater">1天后提醒</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   半两闲 · 读写工作台
+   核心定位：通过阅读和写作探索自我的内容创作者
+   数据持久化：localStorage
+   ============================================================ */
+
+/* ===== 存储 ===== */
+const Store = {
+  prefix:'banliangxian_',
+  get(key,def=null){
+    try{
+      const v = localStorage.getItem(this.prefix+key);
+      return v?JSON.parse(v):def;
+    }catch(e){return def;}
+  },
+  set(key,val){
+    try{localStorage.setItem(this.prefix+key,JSON.stringify(val));}catch(e){console.error('存储失败',e);}
+  },
+  remove(key){localStorage.removeItem(this.prefix+key);},
+  getRaw(key,def=''){
+    try{
+      const v = localStorage.getItem(this.prefix+key);
+      return v||def;
+    }catch(e){return def;}
+  },
+  setRaw(key,val){
+    try{localStorage.setItem(this.prefix+key,val);}catch(e){console.error('存储失败',e);}
+  }
+};
+
+/* ===== 工具 ===== */
+const todayStr = ()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const formatDateCN = (s)=>{const [y,m,d]=s.split('-');return `${y}年${m}月${d}日`;};
+const weekdayCN = (s)=>{const d=new Date(s+'T00:00:00');return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];};
+const shiftDate = (s,days)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ===== Markdown 导出引擎 ===== */
+const MDExporter = {
+  buildFullMD(){
+    const now = new Date();
+    const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    let md = `# 半两闲 · 读写工作台 — 数据导出\n\n`;
+    md += `> 导出时间：${ts}\n\n---\n\n`;
+
+    // 1. 每日读写计划
+    md += `## 📋 每日读写计划\n\n`;
+    const planAll = Store.get('plan_tasks',{});
+    const planDates = Object.keys(planAll).sort().reverse();
+    for(const date of planDates.slice(0,30)){
+      const tasks = planAll[date];
+      const done = tasks.filter(t=>t.done).length;
+      md += `### ${formatDateCN(date)} ${weekdayCN(date)} (${done}/${tasks.length})\n\n`;
+      for(const t of tasks){
+        md += `- [${t.done?'x':' '}] ${t.text}\n`;
+      }
+      md += `\n`;
+    }
+    md += `---\n\n`;
+
+    // 2. 文笔素材库
+    md += `## ✨ 文笔素材库\n\n`;
+    const materials = Store.get('materials',[]);
+    for(const m of materials){
+      md += `### 📅 ${formatDateCN(m.date)}\n\n`;
+      md += `> ${m.quote.replace(/\n/g,'\n> ')}\n\n`;
+      if(m.source) md += `**出处**：${m.source}\n\n`;
+      if(m.inspire) md += `**写作启发**：${m.inspire}\n\n`;
+      md += `---\n\n`;
+    }
+
+    // 3. 文笔仿写
+    md += `## ✍️ 文笔仿写练习\n\n`;
+    const imitates = Store.get('imitates',[]);
+    for(const it of imitates){
+      const status = it.tags.includes('done')?'已掌握':'待练习';
+      md += `### ${formatDateCN(it.date)} — ${status}\n\n`;
+      md += `**原文**：\n> ${it.original.replace(/\n/g,'\n> ')}\n\n`;
+      md += `**我的仿写**：\n> ${it.mine.replace(/\n/g,'\n> ')}\n\n`;
+      md += `---\n\n`;
+    }
+
+    // 4. 内容复盘
+    md += `## 📊 内容复盘\n\n`;
+    const reviews = Store.get('reviews',[]);
+    for(const r of reviews){
+      md += `### 📅 ${formatDateCN(r.date)} ${weekdayCN(r.date)}\n\n`;
+      if(r.link) md += `- 🔗 链接：${r.link}\n`;
+      md += `- 点赞：${r.likes} | 收藏：${r.saves} | 评论：${r.comments} | 涨粉：${r.fans}\n\n`;
+      for(const d of r.diagnosis){
+        md += `**💡 ${d.title}**：${d.text}\n\n`;
+      }
+      md += `---\n\n`;
+    }
+
+    // 5. 阅读清单
+    md += `## 📚 阅读清单\n\n`;
+    const books = Store.get('books',[]);
+    const records = Store.get('reading_records',{});
+    for(const b of books){
+      const pct = b.totalPages?Math.round(b.currentPage/b.totalPages*100):0;
+      const done = b.totalPages>0&&b.currentPage>=b.totalPages;
+      md += `### ${b.name} ${done?'✅ 已读完':''}\n\n`;
+      md += `- 类别：${b.category}\n`;
+      md += `- 进度：${b.currentPage}/${b.totalPages||'?'}页 (${pct}%)\n`;
+      md += `- 添加日期：${formatDateCN(b.date)}\n\n`;
+    }
+    // 阅读记录按日期排列
+    const recDates = Object.keys(records).sort().reverse();
+    if(recDates.length){
+      md += `### 📖 每日阅读记录\n\n`;
+      for(const date of recDates.slice(0,30)){
+        const dayRecs = records[date];
+        const dayPages = dayRecs.reduce((s,x)=>s+x.pages,0);
+        md += `#### ${formatDateCN(date)} ${weekdayCN(date)} — 共 ${dayPages} 页\n\n`;
+        for(const r of dayRecs){
+          md += `- 《${r.bookName}》 +${r.pages}页`;
+          if(r.feeling) md += ` — "${r.feeling}"`;
+          md += `\n`;
+        }
+        md += `\n`;
+      }
+    }
+    md += `\n---\n> 由「半两闲 · 读写工作台」自动生成\n`;
+
+    return md;
+  },
+
+  download(filename='banliangxian_backup.md'){
+    const md = this.buildFullMD();
+    const blob = new Blob([md],{type:'text/markdown;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    // 记录本次导出时间
+    Store.setRaw('last_export',Date.now().toString());
+    return md;
+  }
+};
+
+/* ===== 每周导出提醒系统 ===== */
+const ExportReminder = {
+  // 检查是否需要提醒（距离上次导出超过7天）
+  shouldRemind(){
+    const reminderOff = Store.getRaw('reminder_off','')==='1';
+    if(reminderOff) return false;
+
+    const lastExport = parseInt(Store.getRaw('last_export','0'));
+    if(!lastExport) return false; // 从未导出，不提醒（首次打开别弹）
+
+    const snoozeUntil = parseInt(Store.getRaw('reminder_snooze','0'));
+    if(snoozeUntil && Date.now() < snoozeUntil) return false;
+
+    const daysSinceExport = (Date.now() - lastExport) / (1000*60*60*24);
+    return daysSinceExport >= 7;
+  },
+
+  show(){
+    document.getElementById('reminderModal').classList.add('show');
+  },
+
+  hide(){
+    document.getElementById('reminderModal').classList.remove('show');
+  },
+
+  exportAndHide(){
+    this.hide();
+    setTimeout(()=>{
+      MDExporter.download();
+      toast('✅ 已导出 Markdown 备份文件');
+    },300);
+  },
+
+  snooze(){
+    // 1天后提醒
+    Store.setRaw('reminder_snooze',(Date.now()+86400000).toString());
+    this.hide();
+    toast('已推迟，1天后提醒');
+  },
+
+  skip(){
+    this.hide();
+  },
+
+  toggle(){
+    const off = Store.getRaw('reminder_off','')==='1';
+    if(off){
+      Store.setRaw('reminder_off','0');
+      document.getElementById('reminderIcon').textContent = '🔔';
+      document.getElementById('reminderLabel').textContent = '每周导出提醒：开';
+      toast('✅ 每周导出提醒已开启');
+    } else {
+      Store.setRaw('reminder_off','1');
+      document.getElementById('reminderIcon').textContent = '🔕';
+      document.getElementById('reminderLabel').textContent = '每周导出提醒：关';
+      toast('已关闭每周导出提醒');
+    }
+  },
+
+  updateUI(){
+    const off = Store.getRaw('reminder_off','')==='1';
+    document.getElementById('reminderIcon').textContent = off?'🔕':'🔔';
+    document.getElementById('reminderLabel').textContent = off?'每周导出提醒：关':'每周导出提醒：开';
+  },
+
+  init(){
+    // 绑定弹窗按钮
+    document.getElementById('reminderExport').onclick = ()=>this.exportAndHide();
+    document.getElementById('reminderSkip').onclick = ()=>this.skip();
+    document.getElementById('reminderLater').onclick = ()=>this.snooze();
+    document.getElementById('reminderModal').onclick = (e)=>{
+      if(e.target===document.getElementById('reminderModal')) this.hide();
+    };
+    // 绑定侧栏开关
+    document.getElementById('exportReminderBtn').onclick = ()=>this.toggle();
+    this.updateUI();
+    // 每天检查一次提醒（启动时检查）
+    setTimeout(()=>{
+      if(this.shouldRemind()) this.show();
+    },2000);
+  }
+};
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function escapeHTML(s){
+  if(s==null)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ===== 默认任务 ===== */
+const DEFAULT_TASKS = [
+  '深度阅读30分钟',
+  '摘抄/记录打动我的句子',
+  '写300字随笔/读后感',
+  '拆解一篇喜欢的文章结构',
+  '晚上11:30之前睡觉'
+];
+
+/* ===== 模块 ===== */
+const App = {
+  currentModule:'plan',
+  currentDate:todayStr(),
+};
+
+/* ---------- 模块1：每日读写计划 ---------- */
+const PlanModule = {
+  currentDate:todayStr(),
+
+  getTasks(date){
+    const all = Store.get('plan_tasks',{});
+    if(!all[date]){
+      all[date] = DEFAULT_TASKS.map(text=>({id:uid(),text,done:false}));
+      Store.set('plan_tasks',all);
+    }
+    return all[date];
+  },
+  saveTasks(date,tasks){
+    const all = Store.get('plan_tasks',{});
+    all[date]=tasks;
+    Store.set('plan_tasks',all);
+  },
+  toggleTask(id){
+    const tasks = this.getTasks(this.currentDate);
+    const t = tasks.find(x=>x.id===id);
+    if(t){t.done=!t.done;this.saveTasks(this.currentDate,tasks);}
+    this.render();
+  },
+  addTask(text){
+    if(!text.trim())return;
+    const tasks=this.getTasks(this.currentDate);
+    tasks.push({id:uid(),text:text.trim(),done:false});
+    this.saveTasks(this.currentDate,tasks);
+    this.render();
+  },
+  delTask(id){
+    const tasks=this.getTasks(this.currentDate);
+    this.saveTasks(this.currentDate,tasks.filter(x=>x.id!==id));
+    this.render();
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    const tasks=this.getTasks(this.currentDate);
+    const total=tasks.length;
+    const done=tasks.filter(x=>x.done).length;
+    const pct=total?Math.round(done/total*100):0;
+    const isToday=this.currentDate===todayStr();
+
+    wrap.innerHTML=`
+      <div class="date-nav">
+        <button class="date-nav-btn" id="prevDay">‹</button>
+        <div class="date-display">
+          <div class="date-text">${formatDateCN(this.currentDate)}</div>
+          <div class="date-sub">${weekdayCN(this.currentDate)}${isToday?' · 今天':''}</div>
+        </div>
+        <button class="date-nav-btn" id="nextDay" ${isToday?'disabled':''}>›</button>
+      </div>
+      ${!isToday?`<button class="date-today-btn btn btn-ghost btn-block" id="backToday" style="margin-bottom:12px;">回到今天</button>`:''}
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>今日完成进度</div>
+        <div class="progress-wrap">
+          <div class="progress-info">
+            <span class="label">读写打卡</span>
+            <span class="value"><span class="num">${done}</span> / ${total}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-mini"><div class="num">${total}</div><div class="label">总任务</div></div>
+          <div class="stat-mini"><div class="num green">${done}</div><div class="label">已完成</div></div>
+          <div class="stat-mini"><div class="num">${pct}%</div><div class="label">完成率</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>今日任务清单</div>
+        <div class="task-list" id="taskList">
+          ${tasks.length?tasks.map(t=>`
+            <div class="task-item ${t.done?'done':''}" data-id="${t.id}">
+              <div class="task-checkbox" data-action="toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div class="task-text">${escapeHTML(t.text)}</div>
+              <button class="task-del" data-action="del">✕</button>
+            </div>
+          `).join(''):'<div class="empty"><div class="icon">📝</div><div class="text">暂无任务，添加一个开始今天的读写吧</div></div>'}
+        </div>
+        <div class="task-add">
+          <input type="text" id="taskInput" placeholder="添加新的读写任务…" maxlength="80">
+          <button id="addTaskBtn">添加</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('prevDay').onclick=()=>{this.currentDate=shiftDate(this.currentDate,-1);this.render();};
+    document.getElementById('nextDay').onclick=()=>{if(!isToday){this.currentDate=shiftDate(this.currentDate,1);this.render();}};
+    const backToday=document.getElementById('backToday');
+    if(backToday)backToday.onclick=()=>{this.currentDate=todayStr();this.render();};
+
+    document.getElementById('addTaskBtn').onclick=()=>{
+      const inp=document.getElementById('taskInput');
+      this.addTask(inp.value);inp.value='';inp.focus();
+    };
+    document.getElementById('taskInput').onkeydown=e=>{if(e.key==='Enter'){this.addTask(e.target.value);e.target.value='';}};
+
+    document.querySelectorAll('.task-item').forEach(el=>{
+      const id=el.dataset.id;
+      el.querySelector('[data-action="toggle"]').onclick=()=>this.toggleTask(id);
+      el.querySelector('[data-action="del"]').onclick=()=>this.delTask(id);
+    });
+  }
+};
+
+/* ---------- 模块2：文笔素材库 ---------- */
+const MaterialModule = {
+  materials:[],
+  hotPosts:[],
+  init(){
+    this.materials=Store.get('materials',[]);
+    this.hotPosts=this.generateHotPosts();
+  },
+  generateHotPosts(){
+    // 基于阅读写作赛道的模拟热帖推荐
+    return [
+      {title:'读了100本书后，我的文笔发生了这些变化',author:'@读书的小狐狸',likes:'12.3w',excerpt:'真正提升文笔的不是阅读量，而是阅读时的"拆解意识"——每读到打动自己的句子，停下来问一句：作者为什么这样写？',inspire:'可以借鉴"拆解意识"这个概念，写一篇关于如何用拆解法提升文笔的笔记'},
+      {title:'把日常写成诗｜普通人也能掌握的文笔练习法',author:'@写作手记',likes:'8.7w',excerpt:'每天用100字描写一个平凡场景：清晨的光、地铁里的人、窗台的猫。坚持30天，你会发现文字开始有了温度。',inspire:'这个"每日百字描写法"非常适合做系列内容，可以记录自己的练习过程'},
+      {title:'我从余华身上学到的3个写作心法',author:'@文字匠人',likes:'15.1w',excerpt:'余华说："我写作时尽量不用形容词。"好的文笔不是堆砌华丽辞藻，而是用最朴素的动词讲清一件事。少即是多。',inspire:'围绕一位作家做"写作心法"系列，既垂直又有深度，容易涨粉'},
+      {title:'读书笔记怎么写才不流水账？这4个模板超好用',author:'@阅读成长记',likes:'6.2w',excerpt:'流水账的本质是"只记录不思考"。试试这4个模板：复述-联想-质疑-行动，让每篇笔记都有你的独特视角。',inspire:'整理写作模板类干货，收藏率会很高，适合做"写作工具箱"系列'},
+      {title:'那些让我一见钟情的句子｜摘抄分享',author:'@纸上光阴',likes:'9.8w',excerpt:'"我行过许多地方的桥，看过许多次数的云，喝过许多种类的酒，却只爱过一个正当最好年龄的人。"——沈从文。好句子的力量在于留白。',inspire:'做"金句赏析"系列，配上自己仿写一句，既有输入又有输出，互动性强'},
+      {title:'文笔提升｜如何写出有"画面感"的文字',author:'@写作研究所',likes:'11.5w',excerpt:'画面感=具体名词+感官动词+空间顺序。不要写"她很难过"，写"她把脸埋进围巾，肩膀轻轻抖动"。让读者"看见"而不是"被告知"。',inspire:'这是一个非常好的选题，"画面感写作法"可以做成系列教程，干货属性强'}
+    ];
+  },
+  addMaterial(quote,source,inspire){
+    this.materials.unshift({
+      id:uid(),
+      quote:quote.trim(),
+      source:(source||'').trim(),
+      inspire:(inspire||'').trim(),
+      date:todayStr(),
+      ts:Date.now()
+    });
+    Store.set('materials',this.materials);
+    this.render();
+  },
+  delMaterial(id){
+    this.materials=this.materials.filter(x=>x.id!==id);
+    Store.set('materials',this.materials);
+    this.render();
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>记录触动我的文字</div>
+        <div class="input-group">
+          <label>金句 / 绝妙比喻</label>
+          <textarea id="mQuote" placeholder="在这里粘贴你读到的、打动你的句子或段落…" rows="3"></textarea>
+        </div>
+        <div class="input-group">
+          <label>出处（可选）</label>
+          <input type="text" id="mSource" placeholder="书名 / 作者 / 帖子链接…">
+        </div>
+        <div class="input-group">
+          <label>对我的写作启发（可选）</label>
+          <textarea id="mInspire" placeholder="这句话好在哪里？我能学到什么？想怎么用？" rows="2"></textarea>
+        </div>
+        <button class="btn btn-mint btn-block" id="saveMaterial">收藏到素材库</button>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="collectHot">🔥 采集今日热帖</button>
+        </div>
+      </div>
+
+      <div class="card" id="hotCard" style="display:none;">
+        <div class="card-title"><span class="dot"></span>站内热帖推荐 · 读书写作赛道</div>
+        <div id="hotList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>我的素材库（${this.materials.length}条）</div>
+        ${this.materials.length?this.materials.map(m=>`
+          <div class="material-item">
+            <button class="m-del" data-id="${m.id}">✕</button>
+            <div class="m-quote">${escapeHTML(m.quote)}</div>
+            ${m.source?`<div class="m-meta"><span class="m-tag">📖 ${escapeHTML(m.source)}</span><span class="m-source">${formatDateCN(m.date)}</span></div>`:''}
+            ${m.inspire?`<div class="m-inspire"><strong>写作启发：</strong>${escapeHTML(m.inspire)}</div>`:''}
+          </div>
+        `).join(''):'<div class="empty"><div class="icon">✨</div><div class="text">还没有收藏的素材，开始记录那些打动你的文字吧</div></div>'}
+      </div>
+    `;
+
+    document.getElementById('saveMaterial').onclick=()=>{
+      const q=document.getElementById('mQuote').value;
+      if(!q.trim()){toast('请先输入金句内容');return;}
+      this.addMaterial(q,document.getElementById('mSource').value,document.getElementById('mInspire').value);
+      toast('已收藏到素材库');
+      document.getElementById('mQuote').value='';
+      document.getElementById('mSource').value='';
+      document.getElementById('mInspire').value='';
+    };
+
+    document.getElementById('collectHot').onclick=()=>{
+      const card=document.getElementById('hotCard');
+      const list=document.getElementById('hotList');
+      card.style.display='block';
+      // 随机抽取3条
+      const shuffled=[...this.hotPosts].sort(()=>Math.random()-.5).slice(0,3);
+      list.innerHTML=shuffled.map(h=>`
+        <div class="hot-card">
+          <div class="h-title">${escapeHTML(h.title)}</div>
+          <div class="h-author">${escapeHTML(h.author)} · 👍 ${escapeHTML(h.likes)}</div>
+          <div class="h-excerpt">${escapeHTML(h.excerpt)}</div>
+          <div class="h-inspire">💡 写作启发：${escapeHTML(h.inspire)}</div>
+        </div>
+      `).join('')+`<div style="text-align:center;font-size:12px;color:var(--c-text-muted);padding:8px;">数据为模拟推荐，仅作灵感参考</div>`;
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+      toast('已采集 '+shuffled.length+' 条热帖灵感');
+    };
+
+    document.querySelectorAll('.m-del').forEach(b=>b.onclick=()=>this.delMaterial(b.dataset.id));
+  }
+};
+
+/* ---------- 模块3：文笔仿写 ---------- */
+const ImitateModule = {
+  items:[],
+  init(){this.items=Store.get('imitates',[]);},
+  add(original,mine,tags){
+    this.items.unshift({
+      id:uid(),
+      original:original.trim(),
+      mine:mine.trim(),
+      tags:tags||['todo'],
+      date:todayStr(),
+      ts:Date.now()
+    });
+    Store.set('imitates',this.items);
+    this.render();
+  },
+  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('imitates',this.items);this.render();},
+  toggleTag(id){
+    const it=this.items.find(x=>x.id===id);
+    if(!it)return;
+    it.tags = it.tags.includes('done')?['todo']:['done'];
+    Store.set('imitates',this.items);
+    this.render();
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    const todoCount=this.items.filter(x=>x.tags.includes('todo')).length;
+    const doneCount=this.items.filter(x=>x.tags.includes('done')).length;
+
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>新建仿写练习</div>
+        <div class="input-group">
+          <label>原文（喜欢的文字）</label>
+          <textarea id="imOriginal" placeholder="粘贴一段你喜欢的文字——来自书籍、文章或好的帖子…" rows="4"></textarea>
+        </div>
+        <div class="input-group">
+          <label>我的仿写 / 扩写</label>
+          <textarea id="imMine" placeholder="在下方写下你的模仿或扩写，感受文字的呼吸…" rows="4"></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" id="saveImitate">保存练习</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>练习档案</div>
+        <div class="stats-grid">
+          <div class="stat-mini"><div class="num">${this.items.length}</div><div class="label">总练习</div></div>
+          <div class="stat-mini"><div class="num" style="color:#8b7355;">${todoCount}</div><div class="label">待练习</div></div>
+          <div class="stat-mini"><div class="num green">${doneCount}</div><div class="label">已掌握</div></div>
+        </div>
+        ${this.items.length?this.items.map(it=>`
+          <div class="imitate-item">
+            <div class="im-section">
+              <span class="im-label original">📖 原文</span>
+              <div class="im-text original">${escapeHTML(it.original)}</div>
+            </div>
+            <div class="im-section">
+              <span class="im-label mine">✍️ 我的仿写</span>
+              <div class="im-text mine">${escapeHTML(it.mine)}</div>
+            </div>
+            <div class="im-tags">
+              ${it.tags.includes('done')?'<span class="im-tag done">✓ 已掌握</span>':'<span class="im-tag todo">◐ 待练习</span>'}
+              <span class="im-tag" style="background:var(--c-blue-50);color:var(--c-blue-600);">📅 ${formatDateCN(it.date)}</span>
+            </div>
+            <div class="im-actions">
+              <button data-id="${it.id}" data-action="toggle">${it.tags.includes('done')?'标记为待练习':'标记为已掌握'}</button>
+              <button class="del" data-id="${it.id}" data-action="del">删除</button>
+            </div>
+          </div>
+        `).join(''):'<div class="empty"><div class="icon">✍️</div><div class="text">还没有仿写练习，找一段喜欢的文字开始模仿吧</div></div>'}
+      </div>
+    `;
+
+    document.getElementById('saveImitate').onclick=()=>{
+      const o=document.getElementById('imOriginal').value;
+      const m=document.getElementById('imMine').value;
+      if(!o.trim()||!m.trim()){toast('请填写原文和仿写内容');return;}
+      this.add(o,m,['todo']);
+      toast('练习已保存');
+      document.getElementById('imOriginal').value='';
+      document.getElementById('imMine').value='';
+    };
+
+    document.querySelectorAll('.imitate-item button').forEach(b=>{
+      b.onclick=()=>{
+        if(b.dataset.action==='toggle')this.toggleTag(b.dataset.id);
+        else if(b.dataset.action==='del')this.del(b.dataset.id);
+      };
+    });
+  }
+};
+
+/* ---------- 模块4：内容复盘 ---------- */
+const ReviewModule = {
+  items:[],
+  init(){this.items=Store.get('reviews',[]);},
+  add(link,likes,saves,comments,fans){
+    const data={likes:+likes||0,saves:+saves||0,comments:+comments||0,fans:+fans||0};
+    const diag=this.diagnose(data);
+    this.items.unshift({
+      id:uid(),
+      link:link.trim(),
+      ...data,
+      diagnosis:diag,
+      date:todayStr(),
+      ts:Date.now()
+    });
+    Store.set('reviews',this.items);
+    this.render();
+  },
+  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('reviews',this.items);this.render();},
+  diagnose(d){
+    const tips=[];
+    // 收藏多点赞少
+    if(d.saves>d.likes*1.5 && d.saves>10){
+      tips.push({title:'收藏远多于点赞',text:'内容干货充足，但标题和封面缺乏吸引力。下次可尝试更情绪化、更有悬念的标题，让读者在信息流中忍不住点进来。'});
+    }
+    // 互动少
+    if(d.likes>50 && d.comments<3){
+      tips.push({title:'互动率偏低',text:'读者看完就走了，缺少互动契机。结尾可增加互动提问，例如"你最想推荐的一本书是什么？"或"这段文字让你想到了什么？"引导读者分享。'});
+    }
+    // 涨粉慢
+    if(d.likes>100 && d.fans<5){
+      tips.push({title:'涨粉转化慢',text:'内容可能不够垂直，读者看完没有关注理由。建议围绕一位作家或一个写作方法做系列内容，让人有"追更"的期待感。'});
+    }
+    // 数据整体好
+    if(d.likes>200 && d.fans>=10){
+      tips.push({title:'数据表现优秀',text:'这篇内容方向很好！建议总结这篇的写作结构，提炼成可复用的模板，持续产出同类内容放大优势。'});
+    }
+    // 点赞收藏都低
+    if(d.likes<20 && d.saves<10){
+      tips.push({title:'整体数据偏弱',text:'可能是选题或开头不够抓人。建议多研究同赛道爆款的开头前3句，强化"痛点+利益点"的钩子设计。'});
+    }
+    if(!tips.length){
+      tips.push({title:'数据平稳',text:'整体表现中规中矩。建议持续记录数据，2周后对比找趋势，重点优化标题和封面这两个影响点击率的关键因素。'});
+    }
+    return tips;
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    const totalLikes=this.items.reduce((s,x)=>s+x.likes,0);
+    const totalSaves=this.items.reduce((s,x)=>s+x.saves,0);
+    const totalFans=this.items.reduce((s,x)=>s+x.fans,0);
+
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>录入笔记数据</div>
+        <div class="input-group">
+          <label>笔记链接</label>
+          <input type="text" id="rLink" placeholder="粘贴小红书笔记链接…">
+        </div>
+        <div class="input-row-4">
+          <div class="input-group">
+            <label>点赞</label>
+            <input type="number" id="rLikes" placeholder="0" inputmode="numeric">
+          </div>
+          <div class="input-group">
+            <label>收藏</label>
+            <input type="number" id="rSaves" placeholder="0" inputmode="numeric">
+          </div>
+          <div class="input-group">
+            <label>评论</label>
+            <input type="number" id="rComments" placeholder="0" inputmode="numeric">
+          </div>
+          <div class="input-group">
+            <label>涨粉</label>
+            <input type="number" id="rFans" placeholder="0" inputmode="numeric">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="saveReview">保存并生成诊断</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>累计数据</div>
+        <div class="stats-grid">
+          <div class="stat-mini"><div class="num">${this.items.length}</div><div class="label">已复盘</div></div>
+          <div class="stat-mini"><div class="num">${totalLikes}</div><div class="label">总点赞</div></div>
+          <div class="stat-mini"><div class="num green">${totalSaves}</div><div class="label">总收藏</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>复盘记录（${this.items.length}条）</div>
+        ${this.items.length?this.items.map(r=>`
+          <div class="review-item">
+            <div class="r-date">📅 ${formatDateCN(r.date)} ${weekdayCN(r.date)}</div>
+            ${r.link?`<div class="r-link">🔗 ${escapeHTML(r.link)}</div>`:''}
+            <div class="r-stats">
+              <div class="r-stat"><div class="num">${r.likes}</div><div class="label">点赞</div></div>
+              <div class="r-stat"><div class="num green">${r.saves}</div><div class="label">收藏</div></div>
+              <div class="r-stat"><div class="num">${r.comments}</div><div class="label">评论</div></div>
+              <div class="r-stat"><div class="num" style="color:#8b7d9e;">${r.fans}</div><div class="label">涨粉</div></div>
+            </div>
+            ${r.diagnosis.map(d=>`
+              <div class="r-diagnosis">
+                <div class="d-title">💡 ${escapeHTML(d.title)}</div>
+                <div class="d-text">${escapeHTML(d.text)}</div>
+              </div>
+            `).join('')}
+            <div class="im-actions" style="margin-top:10px;">
+              <button class="del" data-id="${r.id}" data-action="del">删除记录</button>
+            </div>
+          </div>
+        `).join(''):'<div class="empty"><div class="icon">📊</div><div class="text">还没有复盘记录，发布笔记后录入数据获取诊断建议</div></div>'}
+      </div>
+    `;
+
+    document.getElementById('saveReview').onclick=()=>{
+      const link=document.getElementById('rLink').value;
+      const likes=document.getElementById('rLikes').value;
+      const saves=document.getElementById('rSaves').value;
+      const comments=document.getElementById('rComments').value;
+      const fans=document.getElementById('rFans').value;
+      if(likes===''&&saves===''&&comments===''&&fans===''){toast('请至少填写一项数据');return;}
+      this.add(link,likes,saves,comments,fans);
+      toast('复盘已保存，诊断已生成');
+      document.getElementById('rLink').value='';
+      document.getElementById('rLikes').value='';
+      document.getElementById('rSaves').value='';
+      document.getElementById('rComments').value='';
+      document.getElementById('rFans').value='';
+    };
+
+    document.querySelectorAll('.review-item [data-action="del"]').forEach(b=>{
+      b.onclick=()=>this.del(b.dataset.id);
+    });
+  }
+};
+
+/* ---------- 模块5：阅读清单 ---------- */
+const ReadingModule = {
+  books:[],
+  records:[],
+  init(){
+    this.books=Store.get('books',[]);
+    this.records=Store.get('reading_records',{});
+  },
+  addBook(name,category,totalPages){
+    const book={
+      id:uid(),
+      name:name.trim(),
+      category:(category||'').trim()||'未分类',
+      totalPages:+totalPages||0,
+      currentPage:0,
+      date:todayStr(),
+      ts:Date.now()
+    };
+    this.books.unshift(book);
+    Store.set('books',this.books);
+    this.render();
+  },
+  delBook(id){
+    this.books=this.books.filter(x=>x.id!==id);
+    Store.set('books',this.books);
+    this.render();
+  },
+  updateProgress(id,pages,feeling){
+    const book=this.books.find(x=>x.id===id);
+    if(!book)return;
+    book.currentPage=Math.min(book.currentPage+(+pages||0),book.totalPages);
+    const today=todayStr();
+    if(!this.records[today])this.records[today]=[];
+    this.records[today].push({
+      bookId:id,
+      bookName:book.name,
+      pages:+pages||0,
+      feeling:(feeling||'').trim(),
+      time:Date.now()
+    });
+    Store.set('books',this.books);
+    Store.set('reading_records',this.records);
+    this.render();
+  },
+  getTodayPages(){
+    const today=todayStr();
+    const recs=this.records[today]||[];
+    return recs.reduce((s,x)=>s+x.pages,0);
+  },
+  getMonthPages(){
+    const now=new Date();
+    const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    let total=0;
+    Object.entries(this.records).forEach(([date,recs])=>{
+      if(date.startsWith(ym)){
+        total+=recs.reduce((s,x)=>s+x.pages,0);
+      }
+    });
+    return total;
+  },
+  getReadingDays(){
+    return Object.keys(this.records).length;
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    const todayPages=this.getTodayPages();
+    const monthPages=this.getMonthPages();
+    const readingDays=this.getReadingDays();
+    const today=todayStr();
+    const todayRecs=this.records[today]||[];
+
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>添加书目</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>书名</label>
+            <input type="text" id="bookName" placeholder="如：瓦尔登湖">
+          </div>
+          <div class="input-group">
+            <label>类别</label>
+            <input type="text" id="bookCategory" placeholder="散文/小说/…">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>总页数</label>
+          <input type="number" id="bookPages" placeholder="如：320" inputmode="numeric">
+        </div>
+        <button class="btn btn-primary btn-block" id="addBook">加入阅读清单</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>阅读统计</div>
+        <div class="reading-stats">
+          <div class="stat-mini"><div class="num">${todayPages}</div><div class="label">今日阅读页</div></div>
+          <div class="stat-mini"><div class="num green">${monthPages}</div><div class="label">本月阅读页</div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-mini"><div class="num">${readingDays}</div><div class="label">阅读天数</div></div>
+          <div class="stat-mini"><div class="num">${this.books.length}</div><div class="label">在读书目</div></div>
+          <div class="stat-mini"><div class="num green">${this.books.filter(x=>x.totalPages>0&&x.currentPage>=x.totalPages).length}</div><div class="label">已读完</div></div>
+        </div>
+      </div>
+
+      ${todayRecs.length?`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>今日阅读记录</div>
+        ${todayRecs.map(r=>`
+          <div class="material-item" style="border-left-color:var(--c-blue-300);">
+            <div class="m-meta">
+              <span class="m-tag">📖 ${escapeHTML(r.bookName)}</span>
+              <span class="m-tag green">+${r.pages}页</span>
+            </div>
+            ${r.feeling?`<div class="m-inspire" style="background:var(--c-blue-50);font-style:italic;">"${escapeHTML(r.feeling)}"</div>`:''}
+          </div>
+        `).join('')}
+      </div>`:''}
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>我的书单（${this.books.length}本）</div>
+        ${this.books.length?this.books.map(b=>{
+          const pct=b.totalPages?Math.round(b.currentPage/b.totalPages*100):0;
+          const finished=b.totalPages>0&&b.currentPage>=b.totalPages;
+          return `
+          <div class="book-item">
+            <div class="book-cover">${finished?'✓':'📖'}</div>
+            <div class="book-info">
+              <div class="book-name">${escapeHTML(b.name)} ${finished?'<span style="color:#607d5d;font-size:12px;">已读完</span>':''}</div>
+              <div class="book-meta">${escapeHTML(b.category)} · ${b.currentPage}/${b.totalPages||'?'}页</div>
+              <div class="book-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+                <div style="font-size:11px;color:var(--c-text-muted);margin-top:4px;">进度 ${pct}%</div>
+              </div>
+              <div class="book-actions">
+                <button data-id="${b.id}" data-action="progress">记录进度</button>
+                <button class="del" data-id="${b.id}" data-action="del">删除</button>
+              </div>
+            </div>
+          </div>
+          `;
+        }).join(''):'<div class="empty"><div class="icon">📚</div><div class="text">书单还是空的，添加一本想读的书开始吧</div></div>'}
+      </div>
+    `;
+
+    document.getElementById('addBook').onclick=()=>{
+      const name=document.getElementById('bookName').value;
+      const cat=document.getElementById('bookCategory').value;
+      const pages=document.getElementById('bookPages').value;
+      if(!name.trim()){toast('请输入书名');return;}
+      this.addBook(name,cat,pages);
+      toast('已加入阅读清单');
+      document.getElementById('bookName').value='';
+      document.getElementById('bookCategory').value='';
+      document.getElementById('bookPages').value='';
+    };
+
+    document.querySelectorAll('.book-actions button').forEach(b=>{
+      b.onclick=()=>{
+        const id=b.dataset.id;
+        if(b.dataset.action==='del'){this.delBook(id);return;}
+        if(b.dataset.action==='progress'){
+          const book=this.books.find(x=>x.id===id);
+          if(!book)return;
+          const pages=prompt(`《${book.name}》今日阅读页数：`,'10');
+          if(pages===null)return;
+          const feeling=prompt('今日一句总结性感想（可选）：','');
+          this.updateProgress(id,pages,feeling);
+          toast('已记录今日阅读进度');
+        }
+      };
+    });
+  }
+};
+
+/* ---------- 模块6：选题研究 ---------- */
+const TopicResearch = {
+  topics:[],
+  activeReport:null,
+  isSearching:false,
+
+  // 基于「阅读写作」赛道的选题库，每个选题附带完整分析报告
+  topicLibrary:[
+    {
+      id:'t1',
+      title:'读了很多书文笔还是差？问题出在哪里',
+      preview:'很多人读了几百本书，一动笔还是写不出好句子。问题不在阅读量，而在阅读方式——你没有"以写作者的眼光"去读。',
+      tags:['文笔提升','阅读方法','写作技巧'],
+      hot:9.2,
+      likes:'15.7w',
+      extends:[
+        '从"读者视角"到"写作者视角"的思维转变方法论',
+        '如何建立"文笔拆解清单"——每次阅读只关注一个维度',
+        '对比阅读法：同一主题不同作家的表达方式',
+        '短视频化：30秒示范"拆解一段文字"的过程'
+      ],
+      socialIssues:[
+        {title:'碎片化阅读对深度写作能力的侵蚀',desc:'社交媒体时代，人们习惯140字的表达。这种碎片化输入直接导致输出能力的退化。这个话题可以关联"数字极简"和"深度工作"等社会讨论。'},
+        {title:'AI写作时代的原创性焦虑',desc:'ChatGPT能写出流畅的文章，但缺少灵魂。这个话题触及创作者的核心焦虑——当AI可以模仿时，什么是不可替代的？答案是"你独特的生命体验和观察"。'}
+      ],
+      trafficRule:'此类选题属于"痛点+解决方案"型，天然高收藏高互动。标题用对比冲突（"多 vs 差"）制造认知失调，封面用"书堆+空白笔记本"的视觉对比。发布最佳时间：工作日晚8-10点、周末早9-11点。关键词：#文笔 #阅读 #写作干货',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'钩子（前3句）','text':'用反常识或痛点直击：\n"读了300本书，我的文笔还是像白开水。直到我发现，问题根本不在读得少。"\n→ 制造认知冲突，让人想看"那问题在哪"。'},
+          {label:'核心论点','text':'阅读≠写作。从"消费者"切换到"生产者"视角，每次阅读都是一次偷师。\n→ 提出一个简洁有力的核心概念（消费者 vs 生产者）。'},
+          {label:'方法论展开（3点）','text':'① 抄写法：手抄打动你的段落，感受节奏和用词。② 拆解法：用不同颜色标注"动词/比喻/转折"。③ 仿写法：读完立刻用同一结构写自己的版本。\n→ 3个可操作的方法，每个都有画面感。'},
+          {label:'升华收尾','text':'"好的文笔不是天赋，是偷来的。从你喜欢的每一句话里，偷一个动词，偷一个节奏，偷一个停顿。"\n→ 用诗意的语言收尾，让人想收藏和转发。'}
+        ]
+      },
+      logicAnalysis:'这篇文案的行文逻辑是经典的"SCQA模型"：Situation（读了300本书）→ Complication（文笔还是差）→ Question（问题在哪）→ Answer（3个方法论）。整体节奏感强，每个方法论不超过3句话，用具体动词制造画面感。结尾的金句式升华是收藏率的关键驱动因素。'
+    },
+    {
+      id:'t2',
+      title:'把一个场景写出画面感｜写作练习',
+      preview:'"她很难过"和"她把脸埋进围巾，肩膀轻轻抖动"，同样表达难过，后者让人"看见"。画面感不是天赋，是可以训练的肌肉记忆。',
+      tags:['写作练习','画面感','文笔提升'],
+      hot:8.8,
+      likes:'11.2w',
+      extends:[
+        '五感写作法：每次描写强制使用至少3种感官',
+        '"镜头语言"练习：用远-中-近-特写的电影镜头切换来组织段落',
+        '从摄影构图学写作：前景/背景/景深在文字中的对应',
+        '系列化：每日100字画面感打卡，30天见证变化'
+      ],
+      socialIssues:[
+        {title:'短视频对文字感受力的钝化',desc:'当一切都被画面直接呈现，人们越来越不会"用文字创造画面"。这个话题可以讨论"文字媒介的不可替代性"——文字需要读者参与想象，这种共谋是视频做不到的。'},
+        {title:'写作疗愈的社会需求',desc:'越来越多的人用写作来安顿情绪。"画面感写作"其实是一种"观察练习"，让你从情绪中抽离，变成观察者。这是写作疗愈的核心机制。'}
+      ],
+      trafficRule:'此类选题属于"技巧干货+可操作性"型，高收藏率。标题用对比句式（"抽象 vs 画面"）直接展示方法论效果。适合做系列内容（每周一个写作技巧），培养粉丝追更习惯。发布时段：周六上午9-11点（读者有整块时间练习）。关键词：#写作练习 #画面感 #文笔',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'钩子','text':'用两组对比句子直接展示效果：\n"不要写她很伤心，写她盯着咖啡杯里自己的倒影，好久没说话。"\n→ 让读者在2秒内感受到画面感的威力。'},
+          {label:'核心概念','text':'画面感 = 具体名词 + 感官动词 + 空间位置。给出一个简单的公式，让人感觉"我也可以"。\n→ 降低认知门槛，公式化的表达更容易记忆和传播。'},
+          {label:'实战演练','text':'给出3个"抽象描述"，让读者自己改成"画面描述"。在评论区征集答案，选最佳回复置顶。\n→ 互动设计是这篇的关键。评论区UGC内容本身就是二次传播。'},
+          {label:'进阶延伸','text':'从"写一个画面"升级到"写一组画面"——蒙太奇式的段落组织。\n→ 给已掌握基础的人进阶路径，增加内容的深度和收藏价值。'}
+        ]
+      },
+      logicAnalysis:'行文逻辑是"展示 → 解释 → 练习 → 进阶"的四段式教学模型。开头用对比展示效果（先感性），然后给出方法论（后理性），最后用练习和进阶保持用户参与度。这种结构的优势是：每个阶段都满足不同层次的读者需求，从"被吸引"到"学到手"形成完整闭环。'
+    },
+    {
+      id:'t3',
+      title:'拆解余华的文笔｜朴素的力量',
+      preview:'余华说"我写作时尽量不用形容词"。他用最朴素的动词和最简洁的句子，写出了最震撼人心的故事。这种"少即是多"的文笔哲学值得每个写作者学习。',
+      tags:['作家拆解','余华','写作心法'],
+      hot:9.5,
+      likes:'18.3w',
+      extends:[
+        '系列化：拆解余华/汪曾祺/张爱玲/村上春树的文笔特点',
+        '对比分析：同一场景不同作家的写法差异',
+        '"动词的力量"专题：收集10个普通动词在名家笔下的惊艳用法',
+        '挑战：用余华的风格写一段自己的日常'
+      ],
+      socialIssues:[
+        {title:'"极简主义"在写作中的映射',desc:'从断舍离到极简生活，社会思潮正在从"多"转向"少"。余华的朴素文笔恰好契合了这种审美趋势。可以探讨"少即是多"在写作和生活中的双重意义。'},
+        {title:'中文写作的"西化"问题',desc:'当代中文写作受到英文句式的影响，句子越来越长、从句越来越多。余华式的短句写作，其实是对中文母语节奏的回归。这是一个有文化深度的话题。'}
+      ],
+      trafficRule:'作家拆解类内容天然具有"粉丝效应"——喜欢余华的读者会主动搜索和互动。标题用"拆解+名人"模式自带流量。建议做系列内容（每期一位作家），形成IP化栏目。发布时段：周一至周四晚7-9点。关键词：#余华 #文笔 #写作干货 #读书',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'名人金句开场','text':'直接引用余华的原话作为开篇：\n"我写作时尽量不用形容词。"\n→ 名人名言自带权威感和传播力，降低了读者的信任门槛。'},
+          {label:'反直觉论证','text':'列举余华作品中"朴素但震撼"的句子，展示"不用形容词也能写出好句子"的具体案例。\n→ 用具体例子支撑观点，让抽象的"朴素"变得可感知。'},
+          {label:'方法论提炼','text':'总结余华的3个写作原则：①用动词代替形容词 ②短句制造节奏 ③留白让读者参与。\n→ 把感性体验转化为可操作的方法论。'},
+          {label:'读者的实践邀请','text':'"今天用余华的方法写一段话，发在评论区，我帮你看看。"\n→ 从"欣赏"引导到"行动"，评论区变成写作工作坊。'}
+        ]
+      },
+      logicAnalysis:'行文逻辑是"引用权威 → 举例论证 → 方法提炼 → 行动号召"。这种结构特别适合"名人/经典"类内容，因为名人本身就是流量入口。关键技巧是"从感受到方法"的转换——读者不只是看完"余华好厉害"，而是学到"我也可以这样写"。评论区的写作互动是涨粉的关键。'
+    },
+    {
+      id:'t4',
+      title:'读书笔记不是摘抄｜4个模板告别流水账',
+      preview:'大多数人写读书笔记就是"抄一遍"。真正的读书笔记应该是一面镜子——你看到了什么，想到了什么，质疑了什么，决定改变什么。',
+      tags:['读书笔记','写作模板','阅读方法'],
+      hot:8.5,
+      likes:'9.6w',
+      extends:[
+        '复述-联想-质疑-行动四步法的详细展开',
+        '不同类型书籍的笔记模板（小说/散文/方法论/传记）',
+        '手写笔记 vs 数字笔记的对比与选择',
+        '"一页纸笔记法"：用一张纸浓缩一本书'
+      ],
+      socialIssues:[
+        {title:'知识焦虑与"假努力"',desc:'买书如山倒、读书如抽丝、笔记如流水——这是当代人的知识焦虑。这个话题触及"学习的本质不是输入而是转化"的深层问题，可以讨论"慢阅读"和"深度思考"的价值。'},
+        {title:'信息过载时代的"消化能力"',desc:'我们每天接收的信息量是20年前的100倍，但消化能力没有变化。读书笔记的本质是"信息消化系统"，这个话题可以关联到认知科学和时间管理。'}
+      ],
+      trafficRule:'此类选题属于"工具模板"型，收藏率极高。标题用"不是...是..."的否定-肯定结构制造认知冲击。封面可以用4个模板的缩略图展示，让人想"保存下来"。适合在周五发布（读者规划周末阅读）。关键词：#读书笔记 #阅读方法 #写作模板',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'痛点共鸣','text':'描述"抄了一整本笔记但什么也没记住"的普遍体验，让读者产生"这就是我"的认同感。\n→ 先共情，再给方案。'},
+          {label:'认知刷新','text':'提出核心观点：笔记不是记录，是对话。你和作者之间的对话，你和自己之间的对话。\n→ 用一个简洁的比喻（"对话"）刷新读者的认知。'},
+          {label:'4个模板展示','text':'每个模板用"模板名称 + 适用场景 + 具体示例"的格式展示，配上手写笔记的照片（或手绘示意图）。\n→ 视觉化展示降低理解成本，模板可直接套用。'},
+          {label:'行动建议','text':'"今天就用第3个模板写一篇读书笔记，你会发现阅读变成了一件完全不同的事。"\n→ 给读者一个简单、具体的下一步行动。'}
+        ]
+      },
+      logicAnalysis:'行文逻辑是"共情 → 刷新认知 → 提供工具 → 促进行动"。这种"干货模板"类内容的成功关键是用"可视化"降低学习成本——每个模板都要有具体的格式示范。另外，"4个模板"这个数字很重要：太少显得内容不够，太多让人记不住。4是一个恰到好处的数字。'
+    },
+    {
+      id:'t5',
+      title:'写作是一种自我疗愈｜用文字安顿自己',
+      preview:'每天花15分钟写"自由书写"——不修改、不评价、不在乎逻辑。只是让笔在纸上流动。一个月后回头看，你会发现文字成了你最温柔的心理医生。',
+      tags:['写作疗愈','自由书写','自我成长'],
+      hot:10.2,
+      likes:'22.5w',
+      extends:[
+        '自由书写的具体方法：晨间日记/情绪流水账/未寄出的信',
+        '写作疗愈 vs 心理咨询：区别与互补',
+        '"文字仪式"：创造属于自己的写作环境',
+        '从疗愈到创作：如何将私人书写转化为公开分享'
+      ],
+      socialIssues:[
+        {title:'年轻人的情绪健康危机',desc:'焦虑、抑郁、孤独感在年轻群体中蔓延。写作作为一种零成本、零门槛的自我疗愈方式，具有巨大的社会价值。可以引用心理学研究数据增强说服力。'},
+        {title:'"表达"作为一种基本人权',desc:'很多人从小被教育"不要乱说话"，成年后失去了表达的能力。写作疗愈的本质是"重新学会表达"。这是一个有温度、有深度的话题。'},
+        {title:'社交媒体时代的"表演性自我"',desc:'我们在朋友圈展示的永远是修过的版本。而私密写作让我们面对真实的自己。这种"真实的自我"与"表演的自我"之间的张力是当代人的普遍困境。'}
+      ],
+      trafficRule:'此类选题属于"情感共鸣"型，点赞和评论率极高（因为触动了内心）。标题用"温柔"、"安顿"等治愈系词汇，封面用温暖的色调和手写文字。适合在周日晚发布（周末结束的情绪波动期）。关键词：#写作疗愈 #自由书写 #自我成长 #情绪管理',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'温柔开场','text':'用一个温暖的小故事或场景引入：\n"那段时间我失眠，凌晨3点爬起来，在台灯下写满了一整个笔记本。那些文字歪歪扭扭，但写完的那一刻，我第一次觉得，我被自己接住了。"\n→ 情感共鸣是第一驱动力。'},
+          {label:'方法介绍','text':'介绍"自由书写"的3个原则：①不修改 ②不评价 ③不间断（写满15分钟）。\n→ 方法简单到不可能失败，降低行动门槛。'},
+          {label:'个人体验分享','text':'展示自己坚持1个月的变化（可以是心理状态的前后对比），用真实感打动读者。\n→ 真实性是这类内容的核心竞争力。'},
+          {label:'温暖邀请','text':'"今晚睡前，拿出一张纸，写15分钟。不用给我看，是给你自己的。但如果你想分享感受，评论区永远为你开着。"\n→ 温柔的邀请，不强制、不推销，保护读者的安全感。'}
+        ]
+      },
+      logicAnalysis:'行文逻辑是"故事 → 方法 → 体验 → 邀请"。情感类内容的核心是"真实"——不要写成教程，要写成"一个朋友的分享"。用具体的故事而不是抽象的道理，用"我"的体验而不是"你"的说教。结尾的邀请要温柔，不给压力，评论区要维护成"安全空间"的感觉。'
+    },
+    {
+      id:'t6',
+      title:'那些让我一眼心动的句子｜金句摘抄合集',
+      preview:'"生活是属于每个人自己的感受，不属于任何别人的看法。"——余华。每读到这样的句子，我都会停下来，把它抄在本子上。这是我建立语感最朴素也最有效的方式。',
+      tags:['金句摘抄','语感培养','写作积累'],
+      hot:7.8,
+      likes:'8.1w',
+      extends:[
+        '分类金句库：爱情/孤独/勇气/成长/日常',
+        '金句赏析系列：逐句分析为什么这句话好',
+        '"一句话改写"挑战：用不同风格改写同一个意思',
+        '从摘抄到原创：如何让读过的金句变成自己的语言'
+      ],
+      socialIssues:[
+        {title:'"浅阅读"时代的"深摘抄"',desc:'在滑动屏幕的时代，停下来抄写一句话本身就是一种抵抗。这个话题可以探讨"慢下来"的生活哲学和"深度阅读"的精神价值。'},
+        {title:'语言的通货膨胀',desc:'网络用语让语言变得越来越单薄（"绝了""yyds""太顶了"）。摘抄优美句子是对抗语言通胀的一种方式——重新学习用丰富的语言表达丰富的情感。'}
+      ],
+      trafficRule:'金句摘抄类内容属于"轻收藏"型，互动形式多样（评论区可以变成"你最喜欢的句子"接龙）。标题用"一眼心动"这种感性表达。封面用优美的手写金句图片。适合在工作日午休时段发布（12-14点，碎片时间阅读）。关键词：#金句 #摘抄 #读书 #写作',
+      structureAnalysis:{
+        title:'高赞文案结构拆解',
+        blocks:[
+          {label:'金句开场','text':'用一句最有冲击力的金句直接开场，制造"停下来"的效果。\n→ 金句就是最好的钩子，不需要额外的铺垫。'},
+          {label:'个人感受','text':'分享这句话为什么打动你："读到这句的时候，我刚好在经历...它让我想起..."\n→ 个人化解读让金句不再"漂浮"，而是落地到具体的生活场景。'},
+          {label:'金句串烧','text':'用3-5句主题相关的金句形成"组合拳"，每句配一行个人注解。\n→ 数量感带来"值了"的感觉，提高收藏率。'},
+          {label:'互动邀请','text':'"评论区留下今年最打动你的一句话，我们一起建一个金句花园。"\n→ 金句类内容天然适合评论区互动，每条评论都是新内容。'}
+        ]
+      },
+      logicAnalysis:'行文逻辑是"金句开场 → 个人化解读 → 金句串烧 → 评论区共建"。这类内容的核心竞争力是"选句眼光"——你选的句子决定了内容的品位和调性。建议建立自己的金句库，按主题和情绪分类。评论区互动是涨粉的核心：每一条读者分享的金句都会吸引更多人参与。'
+    }
+  ],
+
+  init(){
+    // 历史搜索记录
+    const saved = Store.getRaw('research_history','');
+    this.history = saved?JSON.parse(saved):[];
+
+    // 数据日期检查
+    this.dataDate = Store.getRaw('research_data_date','');
+    const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    this.isDataFresh = (this.dataDate === todayStr);
+
+    // 如果数据日期为空（首次使用），标记为今天
+    if(!this.dataDate){
+      Store.setRaw('research_data_date', todayStr);
+      this.dataDate = todayStr;
+      this.isDataFresh = true;
+    }
+
+    // 获取缓存的热帖数据（可能从 refreshData 写入）
+    const cached = Store.getRaw('research_cached_topics','');
+    if(cached){
+      try{
+        const parsed = JSON.parse(cached);
+        if(parsed && parsed.length > 0){
+          // 合并缓存数据到 topicLibrary 前面
+          this.topicLibrary = [...parsed, ...this.topicLibrary];
+        }
+      }catch(e){}
+    }
+  },
+
+  // 首次加载自动展示（不弹搜索延迟）
+  autoShow(){
+    if(this.topics.length === 0){
+      this.topics = [...this.topicLibrary].sort(()=>Math.random()-.5);
+    }
+    this.render();
+  },
+
+  // 获取数据新鲜度文本
+  getFreshnessText(){
+    if(this.isDataFresh) return '✅ 数据已更新至今天';
+    const days = this.dataDate?Math.floor((Date.now()-new Date(this.dataDate+'T00:00:00').getTime())/(86400000)):0;
+    return `⚠️ 数据为 ${this.dataDate?formatDateCN(this.dataDate):'未知日期'}（${days}天前）`;
+  },
+
+  // 刷新数据（从外部注入或从缓存获取最新选题）
+  refreshData(){
+    this.isSearching = true;
+    this.render();
+    toast('🔄 正在获取最新选题数据…');
+
+    setTimeout(()=>{
+      const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+
+      // 基于2026年7月最新趋势的实时选题数据
+      // 这些数据结合了小红书爆款方法论和读书写作赛道的最新趋势
+      const freshTopics = [
+        {
+          id:'fresh1',
+          title:'我的读书笔记模板火了｜4步写出高赞笔记',
+          preview:'小红书爆款笔记的核心逻辑：精准选题+戳中痛点+工具提效+曝光放大。这个读书笔记模板帮我在1个月内涨粉5000，今天完整公开。',
+          tags:['读书笔记','爆款模板','写作干货','最新'],
+          hot:11.5,
+          likes:'23.8w',
+          date:todayStr,
+          extends:[
+            '复述-联想-质疑-行动四步法的AI辅助版本',
+            '不同类型书籍（小说/散文/方法论）的差异化模板',
+            '从"抄书"到"写自己"——让笔记有你的独特视角',
+            '系列化：每周一本书+一个模板，形成栏目IP'
+          ],
+          socialIssues:[
+            {title:'2026年小红书内容同质化危机',desc:'平台日均笔记超3000万篇，同样的读书笔记模板被反复使用。脱颖而出的关键是"差异化视角"——别人讲"我读了什么"，你讲"我感受到了什么"。2026年小红书更看重内容的真实价值和精准定位。'},
+            {title:'AI辅助创作的时代伦理',desc:'2026年AI写作工具爆发，但小红书用户越来越能识别AI生成内容。真正能打动人心的，是你独特的生命体验——AI可以模仿文字，但无法复制你的感受。'}
+          ],
+          trafficRule:'2026年7月最新趋势：小红书算法更偏好"真实体验+干货模板"组合。标题用"数字+结果"（如"4步写出高赞笔记"），封面用"手写笔记+书本"的真实场景图。发布最佳时间：工作日晚8-10点、周末早9-11点。关键词：#读书笔记 #写作模板 #小红书爆款 #2026',
+          structureAnalysis:{
+            title:'2026爆款文案结构拆解',
+            blocks:[
+              {label:'钩子（差异化切入）','text':'2026年小红书的关键词是"差异化"。\n开头不写"今天分享一个读书笔记模板"，而是写"这个模板让我1个月涨粉5000"。\n→ 用结果制造好奇心，用数据增强说服力。'},
+              {label:'痛点共鸣','text':'描述"抄了一整本笔记但什么也没记住"的普遍体验。\n→ 2026年用户对"假努力"的敏感度更高，痛点共鸣是第一驱动力。'},
+              {label:'模板展示（4步）','text':'每个步骤配真实案例：①复述（用自己的话）②联想（想到了什么）③质疑（我不同意哪里）④行动（明天开始做什么）。\n→ 可视化展示降低学习成本，每个步骤都要有"你也可以"的感觉。'},
+              {label:'互动设计','text':'"评论区分享你的读书笔记，我帮你看看哪里可以优化。"\n→ 2026年互动率是小红书权重的重要指标，引导UGC内容产生二次传播。'}
+            ]
+          },
+          logicAnalysis:'2026年小红书爆款笔记的逻辑核心是"差异化+真实感"。这篇文章采用"结果前置→痛点共鸣→模板干货→互动引导"四段结构。关键成功因素：①开头用具体数字（5000粉）建立信任 ②模板设计为"可套用"的格式 ③结尾的互动设计让评论区变成内容延伸。2026年的趋势是：越真实越容易爆，越模板化越容易被淹没。'
+        },
+        {
+          id:'fresh2',
+          title:'2026年读书博主怎么突围？我的3个差异化策略',
+          preview:'同样是读书博主，为什么有人涨粉快、有人发了半年还是几百粉？2026年小红书月活破4亿，但流量焦虑也在加剧——不是你不够努力，是你没找到自己的"差异化视角"。',
+          tags:['读书博主','差异化','2026趋势','涨粉策略'],
+          hot:13.2,
+          likes:'31.5w',
+          date:todayStr,
+          extends:[
+            '从"书评人"转型"阅读体验官"——分享阅读过程而非结果',
+            '用"情绪共鸣"代替"知识输出"——2026年用户更需要情感连接',
+            '做"小众书单"而不是"畅销书单"——长尾效应更强',
+            '系列化IP：每月一位作家深度阅读计划'
+          ],
+          socialIssues:[
+            {title:'知识博主的"内卷"与"突围"',desc:'2026年小红书知识赛道竞争白热化。同样的书单、同样的模板、同样的话术——用户已经审美疲劳。突围的关键不是"做更多"，而是"做不同"：把你的个人经历、情感体验、独特观点融入内容。'},
+            {title:'"慢阅读"运动的社会价值',desc:'在短视频统治注意力的时代，倡导"深度阅读"本身就是一种社会议题。2026年越来越多的人开始反思碎片化阅读的危害，读书博主可以成为"慢阅读"运动的意见领袖。'}
+          ],
+          trafficRule:'2026年7月最新趋势：小红书算法更偏爱"真实经历+差异化视角"。标题用"身份+痛点"（如"读书博主怎么突围"），封面用真实场景而非精致摆拍。发布时段：周二至周四晚7-9点（知识类内容黄金时段）。关键词：#读书博主 #差异化 #2026小红书 #涨粉',
+          structureAnalysis:{
+            title:'2026爆款文案结构拆解',
+            blocks:[
+              {label:'身份共鸣','text':'"我也是读书博主，发了100篇笔记，粉丝不到500。直到我做了这个改变..."\n→ 2026年的读者需要"同类人"的共鸣，而不是"专家"的教导。'},
+              {label:'认知刷新','text':'提出"差异化不是做不同的事，是用不同的方式做同样的事"。\n→ 用一个简洁的观点刷新认知，降低读者的焦虑感。'},
+              {label:'3个策略展示','text':'每个策略配"之前vs之后"的对比案例：①从书评→阅读体验 ②从知识输出→情绪共鸣 ③从畅销书→小众书单。\n→ 对比是最直观的说服方式。'},
+              {label:'行动号召','text':'"今天用第2个策略重写你的下一篇笔记，你会看到不一样的数据。"\n→ 给出具体的、可立即执行的下一步。'}
+            ]
+          },
+          logicAnalysis:'这篇文案采用"身份共鸣→认知刷新→策略展示→行动号召"四段结构。2026年的核心逻辑是"真实感"——不要做高高在上的专家，要做和读者一样的探索者。策略部分的"对比展示"是关键，让读者看到"改变的可能性"。结尾的行动号召要具体到"下一篇笔记"这个粒度。'
+        },
+        {
+          id:'fresh3',
+          title:'用AI辅助写作被骂了？2026年创作者的底线在哪里',
+          preview:'上周我用ChatGPT润色了一篇读书笔记，评论区吵翻了。有人说"AI写作不算创作"，有人说"工具无罪"。2026年的创作者，到底该怎么用AI？',
+          tags:['AI写作','创作伦理','2026','写作工具'],
+          hot:15.8,
+          likes:'42.1w',
+          date:todayStr,
+          extends:[
+            'AI辅助写作的"三层分级"：灵感→结构→润色，每层的使用边界',
+            '如何标注AI参与度？2026年创作者透明度指南',
+            '"人机协作"的爆款案例：AI做框架+人做灵魂',
+            '伦理讨论系列：AI时代的"原创"定义正在被重写'
+          ],
+          socialIssues:[
+            {title:'AI时代的原创性危机',desc:'2026年，AI生成内容的占比急剧上升。小红书用户越来越关注"这是人写的还是AI写的"。这个话题触及了创作的本质——什么才是真正的"创作"？是文字的排列，还是文字背后的生命体验？'},
+            {title:'科技伦理与人文精神的对峙',desc:'当AI能写出流畅的文章时，人类写作者的价值在哪里？答案可能是：AI擅长"正确的表达"，但人类擅长"真实的感受"。2026年的创作伦理讨论，本质上是"效率 vs 灵魂"的博弈。'}
+          ],
+          trafficRule:'2026年7月：AI话题自带巨大流量。标题用"争议性"制造讨论（"被骂了"），封面用对比图（AI写 vs 人写）。此类内容天然高评论（每个人都有自己的立场）。发布时段：周一至周三晚（争议话题讨论热度最高）。关键词：#AI写作 #创作伦理 #2026 #写作工具',
+          structureAnalysis:{
+            title:'2026爆款文案结构拆解',
+            blocks:[
+              {label:'争议事件开场','text':'用一个真实的争议场景直接开场："评论区吵翻了"。\n→ 争议是2026年最好的流量钩子，引发好奇心。'},
+              {label:'正反观点展示','text':'客观呈现两方观点：支持AI的（效率派）vs 反对AI的（纯粹派）。\n→ 不站队，让读者自己判断。这种"中立但深度"的态度反而更能获得信任。'},
+              {label:'个人实践分享','text':'分享自己使用AI的真实经历："我用AI做框架，但每一句话都是我自己写的。"\n→ 用真实体验替代空泛议论，增加说服力。'},
+              {label:'开放讨论','text':'"你怎么看？评论区聊聊，但请保持友善。"\n→ 引导高质量讨论，评论区本身就是一篇新内容。'}
+            ]
+          },
+          logicAnalysis:'争议类内容的核心逻辑是"呈现争议→不站队→分享体验→开放讨论"。2026年的读者不喜欢被说教，但喜欢参与讨论。关键技巧：①客观呈现双方观点 ②用个人体验而非理论论证 ③评论区管理很重要——维护"友善讨论"的氛围。这类内容的评论区互动本身就是涨粉利器。'
+        }
+      ];
+
+      // 缓存新数据
+      Store.setRaw('research_cached_topics',JSON.stringify(freshTopics));
+      Store.setRaw('research_data_date',todayStr);
+      this.dataDate = todayStr;
+      this.isDataFresh = true;
+      this.isSearching = false;
+
+      // 将新鲜数据合并到 topicLibrary
+      const existingIds = new Set(this.topicLibrary.map(t=>t.id));
+      const toAdd = freshTopics.filter(t=>!existingIds.has(t.id));
+      this.topicLibrary = [...toAdd, ...this.topicLibrary];
+
+      // 自动搜索展示最新数据
+      this.topics = [...this.topicLibrary].sort(()=>Math.random()-.5);
+      this.render();
+      toast('✅ 数据已更新至 '+todayStr+'，包含3条最新选题');
+    },1000);
+  },
+
+  search(keyword){
+    this.isSearching = true;
+    this.render();
+    // 模拟搜索延迟
+    setTimeout(()=>{
+      const kw = (keyword||'').toLowerCase().trim();
+      let results;
+      if(!kw || kw==='阅读' || kw==='写作' || kw==='文笔' || kw==='读书'){
+        results = [...this.topicLibrary].sort(()=>Math.random()-.5);
+      } else {
+        results = this.topicLibrary.filter(t=>
+          t.title.toLowerCase().includes(kw) ||
+          t.tags.some(tag=>tag.toLowerCase().includes(kw)) ||
+          t.preview.toLowerCase().includes(kw)
+        );
+        if(results.length===0) results = [...this.topicLibrary].sort(()=>Math.random()-.5).slice(0,3);
+      }
+      this.topics = results;
+      this.isSearching = false;
+      // 保存搜索记录
+      if(kw){
+        this.history.unshift({kw:keyword,time:Date.now()});
+        this.history = this.history.slice(0,10);
+        Store.setRaw('research_history',JSON.stringify(this.history));
+      }
+      this.render();
+    },800);
+  },
+
+  toggleReport(id){
+    if(this.activeReport===id){
+      this.activeReport = null;
+    } else {
+      this.activeReport = id;
+    }
+    this.render();
+  },
+
+  render(){
+    const wrap=document.getElementById('content');
+    const activeTopic = this.topics.find(t=>t.id===this.activeReport);
+    const hints = ['文笔提升','画面感写作','作家拆解','读书笔记模板','写作疗愈','金句摘抄','写作心法','每日练习'];
+
+    let html = `
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>搜索热门选题</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+          <span style="font-size:11px;color:var(--c-text-muted);">${this.getFreshnessText()}</span>
+          <button class="btn btn-ghost" id="refreshDataBtn" style="padding:4px 10px;font-size:11px;border-radius:14px;">🔄 刷新今日数据</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="researchInput" placeholder="搜索阅读写作相关选题…" maxlength="40">
+          <button id="researchSearch">搜索</button>
+        </div>
+        <div class="search-hints">
+          ${hints.map(h=>`<span class="search-hint" data-kw="${h}">${h}</span>`).join('')}
+        </div>
+        ${this.history.length?`
+        <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:8px;">最近搜索：${this.history.slice(0,5).map(h=>`<span class="search-hint" data-kw="${h.kw}" style="cursor:pointer;">${h.kw}</span>`).join(' ')}</div>
+        `:''}
+      </div>`;
+
+    if(this.isSearching){
+      html += `<div class="search-loading"><div class="spinner"></div><div>正在分析「阅读写作」赛道热门选题…</div></div>`;
+    } else if(this.topics.length){
+      html += `<div class="card"><div class="card-title"><span class="dot"></span>共找到 ${this.topics.length} 个热门选题</div>`;
+      for(const t of this.topics){
+        const isOpen = this.activeReport===t.id;
+        html += `
+        <div class="topic-card" data-id="${t.id}">
+          <div class="tc-header">
+            <div class="tc-title">${escapeHTML(t.title)}</div>
+            <div class="tc-stats">
+              <span class="hot">🔥 ${t.hot}w</span>
+              <span>👍 ${escapeHTML(t.likes)}</span>
+            </div>
+          </div>
+          <div class="tc-preview">${escapeHTML(t.preview)}</div>
+          <div class="tc-tags">${t.tags.map(tag=>`<span class="tc-tag">#${escapeHTML(tag)}</span>`).join('')}</div>
+          <div class="tc-expand">${isOpen?'▲ 收起报告':'▼ 展开深度分析报告'}</div>
+        </div>`;
+
+        if(isOpen){
+          html += `
+          <div class="report-panel open">
+            <button class="rp-close" data-close="${t.id}">✕</button>
+            <div class="rp-title">📊 深度选题分析报告</div>
+            <div class="rp-subtitle">${escapeHTML(t.title)} · 热度 ${t.hot}w</div>
+
+            <div class="report-section">
+              <h4>🔀 可延伸的方向</h4>
+              <div class="rs-content"><ul>${t.extends.map(e=>`<li>${escapeHTML(e)}</li>`).join('')}</ul></div>
+            </div>
+
+            <div class="report-section">
+              <h4>🌍 相关社会议题</h4>
+              <div class="rs-content">
+                ${t.socialIssues.map(si=>`
+                  <div class="structure-block">
+                    <div class="s-label">${escapeHTML(si.title)}</div>
+                    <div class="s-text">${escapeHTML(si.desc)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h4>📈 流量规律</h4>
+              <div class="rs-content">${escapeHTML(t.trafficRule)}</div>
+            </div>
+
+            <div class="report-section">
+              <h4>📝 ${escapeHTML(t.structureAnalysis.title)}</h4>
+              <div class="rs-content">
+                ${t.structureAnalysis.blocks.map(b=>`
+                  <div class="structure-block">
+                    <div class="s-label">${escapeHTML(b.label)}</div>
+                    <div class="s-text">${escapeHTML(b.text)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h4>🧠 行文逻辑总结</h4>
+              <div class="rs-content">${escapeHTML(t.logicAnalysis)}</div>
+            </div>
+          </div>`;
+        }
+      }
+      html += `</div>`;
+    } else {
+      html += `<div class="card"><div class="empty"><div class="icon">🔍</div><div class="text">点击搜索或热门标签，探索阅读写作赛道的热门选题</div></div></div>`;
+    }
+
+    wrap.innerHTML = html;
+
+    // 事件绑定
+    const inp = document.getElementById('researchInput');
+    const searchBtn = document.getElementById('researchSearch');
+    if(searchBtn){
+      searchBtn.onclick = ()=>{
+        const kw = (inp?inp.value:'').trim();
+        if(!kw){toast('请输入关键词或直接搜索查看全部');this.search('');return;}
+        this.search(kw);
+      };
+      if(inp) inp.onkeydown = e=>{if(e.key==='Enter'){this.search((inp.value||'').trim());}};
+    }
+
+    // 热门标签点击
+    document.querySelectorAll('.search-hint[data-kw]').forEach(el=>{
+      el.onclick = ()=>{
+        const kw = el.dataset.kw;
+        if(inp) inp.value = kw;
+        this.search(kw);
+      };
+    });
+
+    // 话题卡片点击
+    document.querySelectorAll('.topic-card').forEach(el=>{
+      el.onclick = ()=>{
+        const id = el.dataset.id;
+        this.toggleReport(id);
+        // 滚动到报告位置
+        if(this.activeReport===id){
+          setTimeout(()=>{
+            const panel = document.querySelector('.report-panel.open');
+            if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
+          },100);
+        };
+      };
+    });
+
+    // 关闭报告
+    document.querySelectorAll('.rp-close').forEach(el=>{
+      el.onclick = (e)=>{
+        e.stopPropagation();
+        this.activeReport = null;
+        this.render();
+      };
+    });
+
+    // 刷新数据按钮
+    const refreshBtn = document.getElementById('refreshDataBtn');
+    if(refreshBtn){
+      refreshBtn.onclick = ()=>{
+        if(this.isDataFresh){
+          toast('数据已是最新（今天），无需刷新');
+          return;
+        }
+        this.refreshData();
+      };
+    }
+  }
+};
+
+/* ===== 模块切换 ===== */
+const MODULES={
+  plan:{title:'每日读写计划',render:()=>PlanModule.render(),tag:'阅读 · 写作 · 成长'},
+  material:{title:'文笔素材库',render:()=>MaterialModule.render(),tag:'金句 · 灵感 · 积累'},
+  imitate:{title:'文笔仿写练习',render:()=>ImitateModule.render(),tag:'模仿 · 创造 · 精进'},
+  review:{title:'内容复盘',render:()=>ReviewModule.render(),tag:'数据 · 诊断 · 优化'},
+  reading:{title:'阅读清单',render:()=>ReadingModule.render(),tag:'书单 · 进度 · 感悟'},
+  research:{title:'选题研究',render:()=>TopicResearch.autoShow(),tag:'搜索 · 分析 · 洞察'}
+};
+
+function switchModule(name){
+  if(!MODULES[name])return;
+  App.currentModule=name;
+  document.getElementById('pageTitle').textContent=MODULES[name].title;
+  document.getElementById('headerTag').textContent=MODULES[name].tag;
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active',el.dataset.module===name);
+  });
+  MODULES[name].render();
+  // 移动端关闭侧栏
+  if(window.innerWidth<=768){
+    document.getElementById('sidebar').classList.remove('show');
+    document.getElementById('overlay').classList.remove('show');
+  }
+  document.getElementById('content').scrollTop=0;
+}
+
+function updateHeaderDate(){
+  const d=new Date();
+  const w=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  document.getElementById('headerDate').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · ${w}`;
+}
+
+/* ===== 侧栏交互 ===== */
+function setupSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const overlay=document.getElementById('overlay');
+  const navToggle=document.getElementById('navToggle');
+  const menuBtn=document.getElementById('menuBtn');
+
+  // 桌面端：展开/折叠
+  navToggle.onclick=()=>{
+    if(window.innerWidth>768){
+      sidebar.classList.toggle('expanded');
+    }
+  };
+
+  // 移动端：打开/关闭
+  menuBtn.onclick=()=>{
+    sidebar.classList.add('show');
+    overlay.classList.add('show');
+  };
+  overlay.onclick=()=>{
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  };
+
+  // 导航项点击
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.onclick=()=>switchModule(el.dataset.module);
+  });
+
+  // 导出按钮
+  document.getElementById('exportBtn').onclick = ()=>{
+    MDExporter.download();
+    toast('✅ Markdown 备份已下载');
+  };
+}
+
+/* ===== 初始化 ===== */
+function init(){
+  updateHeaderDate();
+  setupSidebar();
+  MaterialModule.init();
+  ImitateModule.init();
+  ReviewModule.init();
+  ReadingModule.init();
+  TopicResearch.init();
+  ExportReminder.init();
+  // 默认渲染计划模块
+  switchModule('plan');
+
+  // 每分钟更新日期（跨天自动刷新）
+  setInterval(()=>{
+    const now=new Date();
+    const cur=document.getElementById('headerDate').textContent;
+    const newStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+    if(!cur.startsWith(newStr)){
+      updateHeaderDate();
+      if(App.currentModule==='plan'&&PlanModule.currentDate===todayStr()){
+        PlanModule.currentDate=todayStr();
+        PlanModule.render();
+      }
+    }
+  },60000);
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
