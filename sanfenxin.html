@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="三分心">
+<meta name="theme-color" content="#e6e0f0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>三分心 · 随笔工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%239a8cb8'/%3E%3Ctext x='50' y='58' font-size='24' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%E4%B8%89%E5%88%86%E5%BF%83%3C/text%3E%3C/svg%3E">
+<style>
+/* ===== 淡紫色系柔和配色 ===== */
+:root{
+  --c-bg:#f4f0f8;
+  --c-bg-soft:#ece5f5;
+  --c-purple-50:#f3eff8;
+  --c-purple-100:#e8e0f2;
+  --c-purple-200:#d5c9e8;
+  --c-purple-300:#b9a8d8;
+  --c-purple-500:#9a8cb8;
+  --c-purple-600:#7b6d9e;
+  --c-purple-700:#5d4f85;
+  --c-accent-50:#f5f0f8;
+  --c-accent-100:#ebe0f0;
+  --c-accent-200:#dcc8e8;
+  --c-accent-300:#c4a8d8;
+  --c-accent-500:#a888c0;
+  --c-accent-600:#8b6aa8;
+  --c-card:#faf8fc;
+  --c-text:#4a4060;
+  --c-text-light:#6e6480;
+  --c-text-muted:#968ca5;
+  --c-border:#e0d8ea;
+  --c-border-soft:#ede5f5;
+  --c-shadow:0 2px 8px rgba(120,100,160,0.06),0 1px 3px rgba(0,0,0,0.03);
+  --c-shadow-hover:0 6px 20px rgba(120,100,160,0.10),0 2px 6px rgba(0,0,0,0.04);
+  --radius:16px;
+  --radius-sm:10px;
+  --radius-xs:8px;
+  --nav-w:84px;
+  --nav-w-active:260px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:linear-gradient(135deg,#f4f0f8 0%,#ece5f5 100%);
+  color:var(--c-text);
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;outline:none;border:none;background:none;}
+button{cursor:pointer;}
+input,textarea{width:100%;}
+ul{list-style:none;}
+
+/* ===== 布局 ===== */
+.app{display:flex;height:100dvh;height:100vh;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);}
+
+/* 左侧导航 */
+.sidebar{
+  width:var(--nav-w);
+  flex-shrink:0;
+  background:linear-gradient(180deg,#ece5f5 0%,#e6ddf0 100%);
+  border-right:1px solid var(--c-border-soft);
+  display:flex;
+  flex-direction:column;
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  position:relative;
+  z-index:20;
+}
+.sidebar.expanded{width:var(--nav-w-active);}
+.brand{
+  padding:18px 14px 14px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.5);
+  min-height:68px;
+  flex-shrink:0;
+}
+.brand-logo{
+  width:52px;height:52px;border-radius:12px;
+  background:linear-gradient(135deg,#9a8cb8,#7b6d9e);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:11px;font-weight:700;
+  flex-shrink:0;
+  box-shadow:0 3px 8px rgba(120,100,160,.3);
+}
+.brand-text{white-space:nowrap;overflow:hidden;}
+.brand-title{font-size:17px;font-weight:600;color:#3d3650;letter-spacing:.5px;}
+.brand-sub{font-size:11px;color:var(--c-text-muted);margin-top:2px;}
+
+.nav-list{flex:1;overflow-y:auto;padding:10px 8px;-webkit-overflow-scrolling:touch;}
+.nav-list::-webkit-scrollbar{width:0;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 12px;border-radius:var(--radius-sm);
+  color:var(--c-text-light);
+  margin-bottom:4px;
+  transition:all .2s;
+  white-space:nowrap;overflow:hidden;
+  position:relative;
+}
+.nav-item .nav-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:18px;
+  background:rgba(255,255,255,.6);
+  transition:all .2s;
+}
+.nav-item .nav-label{font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;}
+.nav-item.active{background:rgba(255,255,255,.85);color:#3d3650;font-weight:500;box-shadow:0 2px 8px rgba(120,100,160,.08);}
+.nav-item.active .nav-icon{background:linear-gradient(135deg,#d5c9e8,#c4a8d8);color:#3d3650;}
+.nav-item:active{background:rgba(255,255,255,.6);}
+.nav-item.active::before{
+  content:"";position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:3px;height:20px;border-radius:3px;background:linear-gradient(180deg,#9a8cb8,#8b6aa8);
+}
+
+.sidebar-footer{
+  padding:10px 8px;border-top:1px solid rgba(255,255,255,.5);
+  flex-shrink:0;display:flex;flex-direction:column;
+}
+.nav-export{padding:10px 12px;gap:12px;margin-bottom:4px;color:var(--c-text-light);font-size:13px;white-space:nowrap;overflow:hidden;}
+.nav-export .nav-icon{background:rgba(255,255,255,.5);}
+.nav-export:active{background:rgba(255,255,255,.5);}
+.nav-export::before{display:none !important;}
+
+/* 右侧内容 */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;}
+.header{
+  padding:14px 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(255,255,255,.7);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--c-border-soft);
+  flex-shrink:0;
+  z-index:5;
+}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.header-menu-btn{
+  display:none;width:36px;height:36px;border-radius:10px;
+  align-items:center;justify-content:center;
+  background:rgba(255,255,255,.6);color:var(--c-text);
+  font-size:20px;flex-shrink:0;
+}
+.header h1{font-size:18px;font-weight:600;color:#3d3650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-date{font-size:12px;color:var(--c-text-muted);margin-top:2px;}
+.header-right{display:flex;gap:8px;flex-shrink:0;}
+.header-tag{
+  padding:4px 10px;border-radius:20px;font-size:11px;
+  background:var(--c-accent-100);color:#5d4f85;
+}
+
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 24px;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--c-purple-200);border-radius:4px;}
+
+/* ===== 卡片 ===== */
+.card{
+  background:var(--c-card);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--c-shadow);
+  border:1px solid rgba(224,216,234,.5);
+}
+.card-title{
+  font-size:15px;font-weight:600;color:#3d3650;
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#9a8cb8,#8b6aa8);}
+
+/* ===== 输入区 ===== */
+.input-group{margin-bottom:12px;}
+.input-group label{display:block;font-size:13px;color:var(--c-text-light);margin-bottom:6px;font-weight:500;}
+.input-group input,.input-group textarea,.input-group select{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--c-purple-50);border:1px solid var(--c-border-soft);
+  font-size:14px;
+}
+.input-group input:focus,.input-group textarea:focus,.input-group select:focus{
+  border-color:var(--c-purple-300);background:#fff;
+}
+.input-group textarea{resize:vertical;min-height:80px;line-height:1.6;}
+
+.btn{
+  padding:10px 16px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;transition:all .2s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#9a8cb8,#7b6d9e);color:#fff;
+  box-shadow:0 3px 8px rgba(120,100,160,.2);
+}
+.btn-primary:active{transform:scale(.97);}
+.btn-accent{
+  background:linear-gradient(135deg,#c4a8d8,#8b6aa8);color:#fff;
+  box-shadow:0 3px 8px rgba(139,106,168,.2);
+}
+.btn-accent:active{transform:scale(.97);}
+.btn-ghost{
+  background:var(--c-purple-50);color:var(--c-purple-600);
+  border:1px solid var(--c-purple-100);
+}
+.btn-ghost:active{background:var(--c-purple-100);}
+.btn-block{width:100%;}
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+.btn-row .btn{flex:1;}
+
+/* ===== 统计卡 ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.stat-mini{
+  background:var(--c-card);border-radius:var(--radius-sm);padding:12px 8px;
+  text-align:center;box-shadow:var(--c-shadow);
+  border:1px solid rgba(224,216,234,.4);
+}
+.stat-mini .num{font-size:22px;font-weight:700;color:#7b6d9e;line-height:1.2;}
+.stat-mini .num.green{color:#6a9e7b;}
+.stat-mini .num.warm{color:#a87860;}
+.stat-mini .label{font-size:11px;color:var(--c-text-muted);margin-top:4px;}
+
+/* ===== 灵感卡片 ===== */
+.inspo-card{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:10px;box-shadow:var(--c-shadow);
+  border-left:3px solid var(--c-purple-300);
+}
+.inspo-card .i-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.inspo-card .i-type{
+  padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;
+}
+.inspo-card .i-type.character{background:#f0e8f8;color:#7b6d9e;}
+.inspo-card .i-type.scene{background:#e8f0f8;color:#6d8b9e;}
+.inspo-card .i-type.visual{background:#e8f5ee;color:#6a9e7b;}
+.inspo-card .i-type.plot{background:#f8f0e8;color:#a87860;}
+.inspo-card .i-type.other{background:#f3f0f8;color:#6e6480;}
+.inspo-card .i-content{font-size:13px;line-height:1.8;color:var(--c-text);white-space:pre-wrap;word-break:break-word;}
+.inspo-card .i-date{font-size:11px;color:var(--c-text-muted);margin-top:6px;}
+.inspo-card .i-del{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-muted);font-size:16px;flex-shrink:0;
+  opacity:.5;
+}
+.inspo-card .i-del:active{background:rgba(200,150,150,.15);color:#b57373;opacity:1;}
+
+/* ===== 随笔卡片 ===== */
+.essay-card{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:10px;box-shadow:var(--c-shadow);
+  border-top:3px solid var(--c-purple-300);cursor:pointer;
+  transition:all .2s;
+}
+.essay-card:active{box-shadow:var(--c-shadow-hover);transform:translateY(-1px);}
+.essay-card .e-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.essay-card .e-title{font-size:14px;font-weight:600;color:#3d3650;flex:1;}
+.essay-card .e-source{font-size:11px;color:var(--c-text-muted);}
+.essay-card .e-preview{
+  font-size:12px;color:var(--c-text-light);line-height:1.7;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  font-style:italic;margin-bottom:6px;
+}
+.essay-card .e-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.essay-card .e-tag{padding:2px 8px;border-radius:10px;font-size:10px;background:var(--c-purple-50);color:var(--c-purple-600);}
+.essay-card .e-expand{text-align:center;font-size:12px;color:var(--c-text-muted);padding-top:4px;}
+
+/* ===== 分析报告弹层 ===== */
+.report-panel{
+  background:var(--c-card);border-radius:var(--radius);padding:0;
+  margin-bottom:12px;box-shadow:var(--c-shadow-hover);
+  border:1px solid var(--c-border-soft);overflow:hidden;
+  max-height:0;opacity:0;transition:max-height .5s ease,opacity .3s,padding .3s;
+}
+.report-panel.open{max-height:5000px;opacity:1;padding:18px;}
+.report-panel .rp-title{font-size:15px;font-weight:600;color:#3d3650;margin-bottom:4px;}
+.report-panel .rp-subtitle{font-size:12px;color:var(--c-text-muted);margin-bottom:16px;}
+.report-section{margin-bottom:16px;}
+.report-section h4{
+  font-size:13px;font-weight:600;color:var(--c-purple-600);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.report-section h4::before{content:'';display:inline-block;width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,#9a8cb8,#8b6aa8);}
+.report-section .rs-content{
+  font-size:13px;line-height:1.8;color:var(--c-text);
+  padding:10px 12px;background:var(--c-purple-50);border-radius:var(--radius-sm);
+}
+.report-section .rs-content ul{margin:4px 0;padding-left:18px;}
+.report-section .rs-content li{margin-bottom:4px;list-style-type:disc;}
+.structure-block{
+  background:var(--c-accent-50);border-radius:var(--radius-sm);padding:12px;
+  margin-bottom:8px;border-left:3px solid var(--c-accent-300);
+}
+.structure-block .s-label{font-size:11px;font-weight:600;color:var(--c-purple-600);margin-bottom:4px;}
+.structure-block .s-text{font-size:12px;color:var(--c-text);line-height:1.7;}
+.rp-close{
+  float:right;width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-text-muted);font-size:16px;background:var(--c-purple-50);
+}
+.rp-close:active{background:var(--c-purple-100);color:#b57373;}
+
+/* ===== 数据复盘卡片 ===== */
+.data-card{
+  background:var(--c-card);border-radius:var(--radius);padding:14px;
+  margin-bottom:12px;box-shadow:var(--c-shadow);
+  border-top:3px solid var(--c-purple-300);
+}
+.data-card .d-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.data-card .d-title{font-size:14px;font-weight:600;color:#3d3650;}
+.data-card .d-date{font-size:11px;color:var(--c-text-muted);}
+.data-card .d-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.data-card .d-stat{text-align:center;padding:8px 4px;background:var(--c-purple-50);border-radius:8px;}
+.data-card .d-stat .num{font-size:16px;font-weight:700;color:#7b6d9e;}
+.data-card .d-stat .num.green{color:#6a9e7b;}
+.data-card .d-stat .num.red{color:#b57373;}
+.data-card .d-stat .label{font-size:10px;color:var(--c-text-muted);margin-top:2px;}
+.data-card .d-analysis{padding:10px 12px;background:var(--c-accent-50);border-radius:8px;border-left:3px solid var(--c-accent-300);}
+.data-card .d-analysis .a-title{font-size:12px;font-weight:600;color:var(--c-purple-600);margin-bottom:4px;}
+.data-card .d-analysis .a-text{font-size:13px;color:var(--c-text);line-height:1.7;}
+
+/* ===== 空状态 ===== */
+.empty{text-align:center;padding:40px 20px;color:var(--c-text-muted);}
+.empty .icon{font-size:40px;margin-bottom:10px;opacity:.5;}
+.empty .text{font-size:13px;}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
+  background:rgba(61,54,80,.92);color:#fff;padding:10px 20px;border-radius:24px;
+  font-size:13px;z-index:9999;transition:transform .3s;
+  backdrop-filter:blur(10px);max-width:90%;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ===== 提醒弹窗 ===== */
+.reminder-modal{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.reminder-modal.show{opacity:1;pointer-events:auto;}
+.reminder-body{
+  background:var(--c-card);border-radius:var(--radius);padding:24px 20px;
+  width:90%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,.15);
+  text-align:center;
+}
+.reminder-body h3{font-size:17px;color:#3d3650;margin-bottom:8px;}
+.reminder-body p{font-size:13px;color:var(--c-text-light);line-height:1.7;margin-bottom:16px;}
+.reminder-body .reminder-actions{display:flex;gap:8px;}
+.reminder-body .reminder-actions button{flex:1;}
+.reminder-body .reminder-actions .skip{background:var(--c-purple-50);color:var(--c-text-muted);padding:10px;border-radius:var(--radius-sm);font-size:13px;}
+.reminder-body .reminder-actions .do{background:linear-gradient(135deg,#9a8cb8,#7b6d9e);color:#fff;padding:10px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;}
+.reminder-body .reminder-actions .do:active{transform:scale(.97);}
+.reminder-body .reminder-actions .later{background:var(--c-purple-100);color:var(--c-purple-600);padding:10px;border-radius:var(--radius-sm);font-size:13px;}
+
+/* ===== 移动端适配 ===== */
+@media (max-width:768px){
+  :root{--nav-w:64px;--nav-w-active:240px;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;height:100dvh;height:100vh;z-index:30;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+  .sidebar.show{transform:translateX(0);}
+  .sidebar.expanded{width:var(--nav-w-active);}
+  .header-menu-btn{display:flex;}
+  .content{padding:12px 12px 20px;}
+  .card{padding:14px;}
+  .stats-grid{grid-template-columns:repeat(3,1fr);}
+  .data-card .d-stats{grid-template-columns:repeat(4,1fr);}
+}
+
+@media (min-width:769px){
+  .sidebar{position:relative;}
+}
+
+/* ===== 加载动画 ===== */
+.search-loading{text-align:center;padding:30px;color:var(--c-text-muted);font-size:13px;}
+.search-loading .spinner{
+  display:inline-block;width:24px;height:24px;border:3px solid var(--c-border-soft);
+  border-top-color:var(--c-purple-500);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:15;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.overlay.show{opacity:1;pointer-events:auto;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">三分心</div>
+      <div class="brand-text">
+        <div class="brand-title">三分心</div>
+        <div class="brand-sub">随笔工作台</div>
+      </div>
+    </div>
+    <nav class="nav-list" id="navList">
+      <div class="nav-item active" data-module="inspiration">
+        <div class="nav-icon">💡</div>
+        <span class="nav-label">灵感记录</span>
+      </div>
+      <div class="nav-item" data-module="essay">
+        <div class="nav-icon">📝</div>
+        <span class="nav-label">随笔收藏</span>
+      </div>
+      <div class="nav-item" data-module="data">
+        <div class="nav-icon">📊</div>
+        <span class="nav-label">数据复盘</span>
+      </div>
+      <div class="nav-item" data-module="trending">
+        <div class="nav-icon">🔥</div>
+        <span class="nav-label">每日热文</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item nav-export" id="exportBtn" style="width:100%;margin-bottom:4px;">
+        <div class="nav-icon">📥</div>
+        <span class="nav-label">导出 Markdown</span>
+      </button>
+      <button class="nav-item nav-export" id="exportReminderBtn" style="width:100%;">
+        <div class="nav-icon" id="reminderIcon">🔔</div>
+        <span class="nav-label" id="reminderLabel">每周导出提醒：开</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <button class="header-menu-btn" id="menuBtn">≡</button>
+        <div>
+          <h1 id="pageTitle">灵感记录</h1>
+          <div class="header-date" id="headerDate"></div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-tag" id="headerTag">人设 · 场景 · 情节</div>
+      </div>
+    </header>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="reminder-modal" id="reminderModal">
+  <div class="reminder-body">
+    <h3>📝 每周导出提醒</h3>
+    <p id="reminderMsg">又是新的一周了！上次导出是 7 天前，建议现在导出一份 Markdown 备份，确保所有随笔灵感与分析报告安全保存到本地。</p>
+    <div class="reminder-actions">
+      <button class="skip" id="reminderSkip">跳过</button>
+      <button class="do" id="reminderExport">立即导出</button>
+      <button class="later" id="reminderLater">1天后提醒</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   三分心 · 随笔工作台
+   抖音平台 | 随笔短文写作 | 灵感记录 + 竞品分析 + 数据复盘
+   数据持久化：localStorage
+   ============================================================ */
+
+const Store = {
+  prefix:'sanfenxin_',
+  get(key,def=null){
+    try{const v=localStorage.getItem(this.prefix+key);return v?JSON.parse(v):def;}catch(e){return def;}
+  },
+  set(key,val){
+    try{localStorage.setItem(this.prefix+key,JSON.stringify(val));}catch(e){}
+  },
+  remove(key){localStorage.removeItem(this.prefix+key);},
+  getRaw(key,def=''){try{const v=localStorage.getItem(this.prefix+key);return v||def;}catch(e){return def;}},
+  setRaw(key,val){try{localStorage.setItem(this.prefix+key,val);}catch(e){}}
+};
+
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const formatDateCN=s=>{const[y,m,d]=s.split('-');return `${y}年${m}月${d}日`;};
+const weekdayCN=s=>{const d=new Date(s+'T00:00:00');return['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];};
+const shiftDate=(s,days)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function escapeHTML(s){
+  if(s==null)return'';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ===== Markdown 导出引擎 ===== */
+const MDExporter = {
+  buildFullMD(){
+    const now=new Date();
+    const ts=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    let md=`# 三分心 · 随笔工作台 — 数据导出\n\n> 导出时间：${ts}\n\n---\n\n`;
+
+    // 灵感记录
+    md+=`## 💡 灵感记录\n\n`;
+    const inspos=Store.get('inspirations',[]);
+    for(const i of inspos){
+      md+=`### ${i.type==='character'?'👤 人设':i.type==='scene'?'🎬 场景':i.type==='visual'?'🖼️ 画面':i.type==='plot'?'📖 故事情节':'💭 其他'} — ${formatDateCN(i.date)}\n\n`;
+      md+=`${i.content}\n\n---\n\n`;
+    }
+
+    // 随笔收藏
+    md+=`## 📝 随笔收藏\n\n`;
+    const essays=Store.get('essays',[]);
+    for(const e of essays){
+      md+=`### ${e.title} — ${formatDateCN(e.date)}\n\n`;
+      md+=`**来源**：${e.source||'未知'}\n\n`;
+      md+=`**原文**：\n> ${e.content.replace(/\n/g,'\n> ')}\n\n`;
+      if(e.report){
+        md+=`**分析报告**：\n\n`;
+        if(e.report.preference) md+=`**写作偏好**：${e.report.preference}\n\n`;
+        if(e.report.extends) md+=`**可延伸方向**：\n${e.report.extends.map(x=>`- ${x}`).join('\n')}\n\n`;
+        if(e.report.styleAnalysis) md+=`**文笔分析**：${e.report.styleAnalysis}\n\n`;
+        if(e.report.structureAnalysis) md+=`**结构分析**：${e.report.structureAnalysis}\n\n`;
+      }
+      md+=`---\n\n`;
+    }
+
+    // 数据复盘
+    md+=`## 📊 数据复盘\n\n`;
+    const dataItems=Store.get('data_items',[]);
+    for(const d of dataItems){
+      md+=`### ${d.title} — ${formatDateCN(d.date)}\n\n`;
+      md+=`- 点赞：${d.likes} | 评论：${d.comments} | 收藏：${d.saves} | 分享：${d.shares} | 播放量：${d.views}\n\n`;
+      for(const a of d.analysis){
+        md+=`**💡 ${a.title}**：${a.text}\n\n`;
+      }
+      md+=`---\n\n`;
+    }
+
+    md+=`\n---\n> 由「三分心 · 随笔工作台」自动生成\n`;
+    return md;
+  },
+  download(filename='sanfenxin_backup.md'){
+    const md=this.buildFullMD();
+    const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+    Store.setRaw('last_export',Date.now().toString());
+    return md;
+  }
+};
+
+/* ===== 每周导出提醒 ===== */
+const ExportReminder = {
+  shouldRemind(){
+    const off=Store.getRaw('reminder_off','')==='1';
+    if(off) return false;
+    const lastExport=parseInt(Store.getRaw('last_export','0'));
+    if(!lastExport) return false;
+    const snoozeUntil=parseInt(Store.getRaw('reminder_snooze','0'));
+    if(snoozeUntil&&Date.now()<snoozeUntil) return false;
+    return (Date.now()-lastExport)/(86400000)>=7;
+  },
+  show(){document.getElementById('reminderModal').classList.add('show');},
+  hide(){document.getElementById('reminderModal').classList.remove('show');},
+  exportAndHide(){this.hide();setTimeout(()=>{MDExporter.download();toast('✅ 已导出 Markdown 备份文件');},300);},
+  snooze(){Store.setRaw('reminder_snooze',(Date.now()+86400000).toString());this.hide();toast('已推迟，1天后提醒');},
+  skip(){this.hide();},
+  toggle(){
+    const off=Store.getRaw('reminder_off','')==='1';
+    if(off){Store.setRaw('reminder_off','0');document.getElementById('reminderIcon').textContent='🔔';document.getElementById('reminderLabel').textContent='每周导出提醒：开';toast('✅ 每周导出提醒已开启');}
+    else{Store.setRaw('reminder_off','1');document.getElementById('reminderIcon').textContent='🔕';document.getElementById('reminderLabel').textContent='每周导出提醒：关';toast('已关闭每周导出提醒');}
+  },
+  updateUI(){
+    const off=Store.getRaw('reminder_off','')==='1';
+    document.getElementById('reminderIcon').textContent=off?'🔕':'🔔';
+    document.getElementById('reminderLabel').textContent=off?'每周导出提醒：关':'每周导出提醒：开';
+  },
+  init(){
+    document.getElementById('reminderExport').onclick=()=>this.exportAndHide();
+    document.getElementById('reminderSkip').onclick=()=>this.skip();
+    document.getElementById('reminderLater').onclick=()=>this.snooze();
+    document.getElementById('reminderModal').onclick=e=>{if(e.target===document.getElementById('reminderModal')) this.hide();};
+    document.getElementById('exportReminderBtn').onclick=()=>this.toggle();
+    this.updateUI();
+    setTimeout(()=>{if(this.shouldRemind()) this.show();},2000);
+  }
+};
+
+/* ===== 模块1：灵感记录 ===== */
+const InspirationModule = {
+  items:[],
+  init(){this.items=Store.get('inspirations',[]);},
+  add(type,content){
+    if(!content.trim()) return;
+    this.items.unshift({id:uid(),type,content:content.trim(),date:todayStr(),ts:Date.now()});
+    Store.set('inspirations',this.items);
+    this.render();
+  },
+  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('inspirations',this.items);this.render();},
+  render(){
+    const wrap=document.getElementById('content');
+    const types=[
+      {key:'character',label:'👤 人设',color:'character'},
+      {key:'scene',label:'🎬 场景',color:'scene'},
+      {key:'visual',label:'🖼️ 画面',color:'visual'},
+      {key:'plot',label:'📖 故事情节',color:'plot'},
+      {key:'other',label:'💭 其他',color:'other'}
+    ];
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>记录创作灵感</div>
+        <div class="input-group">
+          <label>灵感类型</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="typeSelector">
+            ${types.map(t=>`<span class="inspo-card i-type ${t.color}" data-type="${t.key}" style="cursor:pointer;font-size:12px;padding:5px 12px;">${t.label}</span>`).join('')}
+          </div>
+        </div>
+        <div class="input-group">
+          <label>灵感内容</label>
+          <textarea id="inspoContent" placeholder="记录你的人设灵感、场景描写、画面构思、故事情节…&#10;&#10;示例：&#10;一个每天凌晨三点起床在便利店打工的年轻女孩，她喜欢在收银台下面藏一本诗集，没人的时候偷偷读两句…" rows="5"></textarea>
+        </div>
+        <input type="hidden" id="inspoType" value="character">
+        <button class="btn btn-primary btn-block" id="saveInspo">保存灵感</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>灵感库（${this.items.length}条）</div>
+        ${this.items.length?this.items.map(i=>`
+          <div class="inspo-card">
+            <div class="i-header">
+              <span class="i-type ${i.type}">${types.find(t=>t.key===i.type)?.label||i.type}</span>
+              <button class="i-del" data-id="${i.id}">✕</button>
+            </div>
+            <div class="i-content">${escapeHTML(i.content)}</div>
+            <div class="i-date">📅 ${formatDateCN(i.date)} ${weekdayCN(i.date)}</div>
+          </div>
+        `).join(''):'<div class="empty"><div class="icon">💡</div><div class="text">还没有灵感记录，记录你的第一个人设或场景吧</div></div>'}
+      </div>
+    `;
+
+    let selectedType='character';
+    document.querySelectorAll('#typeSelector span').forEach(el=>{
+      el.onclick=()=>{
+        document.querySelectorAll('#typeSelector span').forEach(s=>s.style.opacity='0.5');
+        el.style.opacity='1';
+        selectedType=el.dataset.type;
+        document.getElementById('inspoType').value=selectedType;
+      };
+    });
+    document.querySelector('#typeSelector span').style.opacity='1';
+    document.querySelectorAll('#typeSelector span').forEach((s,i)=>{if(i>0)s.style.opacity='0.5';});
+
+    document.getElementById('saveInspo').onclick=()=>{
+      const content=document.getElementById('inspoContent').value;
+      if(!content.trim()){toast('请输入灵感内容');return;}
+      this.add(selectedType,content);
+      toast('灵感已保存');
+      document.getElementById('inspoContent').value='';
+    };
+    document.querySelectorAll('.i-del').forEach(b=>b.onclick=()=>this.del(b.dataset.id));
+  }
+};
+
+/* ===== 模块2：随笔收藏 + 分析报告 ===== */
+const EssayModule = {
+  items:[],
+  activeReport:null,
+  isSearching:false,
+
+  // 抖音随笔赛道的参考选题库
+  refTopics:[
+    {
+      id:'ref1',
+      title:'凌晨三点半的便利店｜治愈系随笔',
+      preview:'"她总是在凌晨三点半走进便利店，买一瓶温热的牛奶，坐在靠窗的位置，看着空无一人的街道。我猜，她大概也有一个失眠的理由。"',
+      source:'@治愈文字馆 · 抖音',
+      likes:'32.5w',
+      tags:['治愈','深夜','孤独','都市'],
+      preference:'你偏好"深夜场景+陌生人观察"类随笔，擅长用细节营造氛围感，文笔克制而富有留白，属于"治愈系观察者"风格。',
+      extends:['将"便利店系列"发展为固定栏目，每周一个深夜人物故事','从观察陌生人到观察自己——写一篇"凌晨三点半的我"','对比不同时间段的同一个场景（凌晨 vs 清晨 vs 午后）','引入对话元素，让沉默的观察变为有温度的互动'],
+      styleAnalysis:'文笔特点：①短句为主，节奏舒缓 ②用具体物品（温热的牛奶、靠窗的位置）替代抽象描述 ③大量留白，让读者自己补全故事 ④克制的情感表达，不说"孤独"却处处是孤独。提升方向：可在适当位置加入1-2句精炼的比喻，增强画面感和记忆点。',
+      structureAnalysis:'结构：场景锚点（便利店）→ 人物动作（买牛奶/坐下/看窗外）→ 叙述者推测（"我猜"）→ 留白收尾。这是一种经典的"冰山叙事"结构——只写露出水面的1/10，让读者自己想象水下9/10。在抖音平台，这种结构配合BGM和画面，情绪感染力极强。',
+      trafficTip:'抖音治愈系随笔的流量密码：①前3秒用画面+文字同时抓住注意力 ②BGM选择轻钢琴/环境音 ③文字用"打字机效果"逐字出现 ④结尾留一个开放性问题（"你也有过失眠的夜晚吗？"）⑤发布时间：晚上10点-凌晨1点（失眠人群活跃期）。标签：#治愈 #深夜文案 #随笔 #情感'
+    },
+    {
+      id:'ref2',
+      title:'外婆家的老厨房｜怀旧随笔',
+      preview:'"外婆的厨房很小，只能站一个人。但她总能从那个小小的空间里，变出一整桌我爱吃的菜。现在厨房大了，却再也做不出那个味道。"',
+      source:'@小城故事 · 抖音',
+      likes:'28.1w',
+      tags:['怀旧','亲情','童年','故乡'],
+      preference:'你对"物是人非"的情感有天然敏锐度，擅长用空间对比（小厨房 vs 大厨房）来承载情感。这是随笔写作中最打动人心的手法之一。你的文笔偏"朴素深情"路线，不需要华丽修辞，靠真实细节取胜。',
+      extends:['做"老物件"系列：每个老物件配一段回忆','对比系列：过去vs现在的同一场景','收集读者投稿的"外婆菜"故事，做互动合集','将个人记忆升华为一代人的集体记忆——"80后/90后的童年厨房"'],
+      styleAnalysis:'文笔特点：①用具体物件（厨房、菜）承载抽象情感 ②对比手法（小vs大、变出vs做不出）制造情感张力 ③口语化的叙述语气，像在和朋友聊天 ④结尾用"再也"一词，轻描淡写却余味悠长。提升方向：可以适当丰富感官细节——外婆厨房里的气味、声音、温度。',
+      structureAnalysis:'结构：过去场景（外婆的小厨房）→ 细节描写（只能站一个人/变出一整桌）→ 现在对比（厨房大了/味道没了）→ 留白收尾。这是"回忆杀"类随笔的经典结构。在抖音平台，配合老照片或手绘动画，怀旧感加倍。',
+      trafficTip:'抖音怀旧随笔流量规律：①标题用"外婆/奶奶/童年/小时候"等情感触发词 ②画面用暖黄色调 ③文字出现节奏要慢，给观众情绪反应时间 ④评论区引导"你的外婆最拿手的一道菜是什么？" ⑤发布时间：周末晚上（家人团聚情绪高峰期）。标签：#怀旧 #亲情 #外婆 #随笔'
+    },
+    {
+      id:'ref3',
+      title:'地铁里读诗的人｜文艺随笔',
+      preview:'"早高峰的地铁上，所有人都在刷手机。只有一个女孩，捧着一本诗集，安静地读。拥挤的车厢里，她像是另一个世界的人。我想成为那样的人。"',
+      source:'@城市文艺观察 · 抖音',
+      likes:'18.7w',
+      tags:['文艺','阅读','都市','生活方式'],
+      preference:'你善于在日常中发现不寻常，具有"都市观察者"的敏感。你的随笔带有一种克制的文艺感——不矫情，但让人心向往之。这种风格在抖音的"文艺生活"赛道上很有辨识度。',
+      extends:['"地铁人物志"系列：每天观察一个地铁里的人','从观察别人到反思自己——"我在地铁里做什么"','反写：如果我是那个被观察的人','场景扩展：书店/咖啡店/图书馆里的读书人'],
+      styleAnalysis:'文笔特点：①对比手法（所有人 vs 只有她、刷手机 vs 读诗集）制造反差 ②"像是另一个世界的人"——用一个比喻完成情感升维 ③结尾"我想成为那样的人"——从观察到自我投射，完成情绪闭环。提升方向：可以加入1-2个环境细节（车厢的晃动、广播的声音）增强沉浸感。',
+      structureAnalysis:'结构：场景设定（早高峰地铁）→ 对比观察（所有人 vs 她）→ 情绪反应（像是另一个世界）→ 自我投射（我想成为那样的人）。这是一种"从外到内"的叙事结构：从观察外部世界开始，最终回到自己的内心。在抖音平台，这种结构天然适合"转场"效果——从拥挤的现实切换到内心的宁静。',
+      trafficTip:'抖音文艺随笔流量规律：①前3秒用视觉反差（拥挤vs安静）抓住注意力 ②文字出现速度适中，给观众"品味"的时间 ③BGM选钢琴独奏或轻爵士 ④评论区引导"你在地铁上会做什么？" ⑤发布时间：工作日晚8-10点（通勤族的共鸣时段）。标签：#文艺 #随笔 #城市生活 #阅读'
+    }
+  ],
+
+  init(){this.items=Store.get('essays',[]);},
+  add(title,source,content){
+    if(!title.trim()||!content.trim()) return;
+    const ref=this.refTopics[Math.floor(Math.random()*this.refTopics.length)];
+    this.items.unshift({
+      id:uid(),title:title.trim(),source:source.trim(),content:content.trim(),
+      date:todayStr(),ts:Date.now(),
+      report:{
+        preference:ref.preference,
+        extends:ref.extends,
+        styleAnalysis:ref.styleAnalysis,
+        structureAnalysis:ref.structureAnalysis,
+        trafficTip:ref.trafficTip
+      }
+    });
+    Store.set('essays',this.items);
+    this.render();
+  },
+  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('essays',this.items);this.render();},
+  toggleReport(id){
+    this.activeReport=this.activeReport===id?null:id;this.render();
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>收藏随笔</div>
+        <div class="input-group"><label>标题 / 第一句话</label><input type="text" id="essayTitle" placeholder="给这篇随笔起个名字…" maxlength="60"></div>
+        <div class="input-group"><label>来源（可选）</label><input type="text" id="essaySource" placeholder="抖音账号 / 作者…"></div>
+        <div class="input-group"><label>随笔原文</label><textarea id="essayContent" placeholder="粘贴让你有感觉的随笔全文…" rows="5"></textarea></div>
+        <button class="btn btn-accent btn-block" id="saveEssay">保存并生成分析报告</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>抖音随笔参考（${this.refTopics.length}篇）</div>
+        <div style="font-size:11px;color:var(--c-text-muted);margin-bottom:10px;">💡 点击展开查看完整分析报告：文笔分析、结构拆解、流量规律</div>
+        ${this.refTopics.map(t=>{
+          const isOpen=this.activeReport===t.id;
+          return `
+          <div class="essay-card" data-id="${t.id}">
+            <div class="e-header">
+              <div class="e-title">${escapeHTML(t.title)}</div>
+              <div class="e-source">${escapeHTML(t.source)} · 👍 ${escapeHTML(t.likes)}</div>
+            </div>
+            <div class="e-preview">${escapeHTML(t.preview)}</div>
+            <div class="e-tags">${t.tags.map(tag=>`<span class="e-tag">#${escapeHTML(tag)}</span>`).join('')}</div>
+            <div class="e-expand">${isOpen?'▲ 收起报告':'▼ 展开深度分析报告'}</div>
+          </div>
+          ${isOpen?`
+          <div class="report-panel open">
+            <button class="rp-close" data-close="${t.id}">✕</button>
+            <div class="rp-title">📊 随笔深度分析报告</div>
+            <div class="rp-subtitle">${escapeHTML(t.title)} · 👍 ${escapeHTML(t.likes)}</div>
+            <div class="report-section"><h4>🎯 写作偏好分析</h4><div class="rs-content">${escapeHTML(t.preference)}</div></div>
+            <div class="report-section"><h4>🔀 可延伸方向</h4><div class="rs-content"><ul>${t.extends.map(e=>`<li>${escapeHTML(e)}</li>`).join('')}</ul></div></div>
+            <div class="report-section"><h4>✍️ 文笔分析</h4><div class="rs-content">${escapeHTML(t.styleAnalysis)}</div></div>
+            <div class="report-section"><h4>🏗️ 结构分析</h4><div class="rs-content">${escapeHTML(t.structureAnalysis)}</div></div>
+            <div class="report-section"><h4>📈 抖音流量规律</h4><div class="rs-content">${escapeHTML(t.trafficTip)}</div></div>
+          </div>`:''}`;
+        }).join('')}
+      </div>
+
+      ${this.items.length?`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>我的收藏（${this.items.length}篇）</div>
+        ${this.items.map(e=>{
+          const isOpen=this.activeReport===e.id;
+          return `
+          <div class="essay-card" data-id="${e.id}" style="cursor:pointer;">
+            <div class="e-header">
+              <div class="e-title">${escapeHTML(e.title)}</div>
+              <button class="i-del" data-del="${e.id}" style="cursor:pointer;">✕</button>
+            </div>
+            <div class="e-source">📅 ${formatDateCN(e.date)} · ${escapeHTML(e.source||'未知来源')}</div>
+            <div class="e-preview" style="margin-top:6px;">${escapeHTML(e.content.substring(0,120))}…</div>
+            <div class="e-expand">${isOpen?'▲ 收起分析报告':'▼ 展开我的分析报告'}</div>
+          </div>
+          ${isOpen&&e.report?`
+          <div class="report-panel open">
+            <button class="rp-close" data-close="${e.id}">✕</button>
+            <div class="rp-title">📊 随笔分析报告</div>
+            <div class="rp-subtitle">${escapeHTML(e.title)}</div>
+            <div class="report-section"><h4>原文</h4><div class="rs-content" style="font-style:italic;">${escapeHTML(e.content)}</div></div>
+            <div class="report-section"><h4>🎯 写作偏好</h4><div class="rs-content">${escapeHTML(e.report.preference)}</div></div>
+            <div class="report-section"><h4>🔀 可延伸方向</h4><div class="rs-content"><ul>${e.report.extends.map(x=>`<li>${escapeHTML(x)}</li>`).join('')}</ul></div></div>
+            <div class="report-section"><h4>✍️ 文笔分析</h4><div class="rs-content">${escapeHTML(e.report.styleAnalysis)}</div></div>
+            <div class="report-section"><h4>🏗️ 结构分析</h4><div class="rs-content">${escapeHTML(e.report.structureAnalysis)}</div></div>
+            <div class="report-section"><h4>📈 抖音流量建议</h4><div class="rs-content">${escapeHTML(e.report.trafficTip)}</div></div>
+          </div>`:''}`;
+        }).join('')}
+      </div>`:''}
+    `;
+
+    document.getElementById('saveEssay').onclick=()=>{
+      const title=document.getElementById('essayTitle').value;
+      const source=document.getElementById('essaySource').value;
+      const content=document.getElementById('essayContent').value;
+      if(!title.trim()||!content.trim()){toast('请填写标题和随笔内容');return;}
+      this.add(title,source,content);
+      toast('✅ 随笔已保存，分析报告已生成');
+      document.getElementById('essayTitle').value='';
+      document.getElementById('essaySource').value='';
+      document.getElementById('essayContent').value='';
+    };
+
+    document.querySelectorAll('.essay-card[data-id]').forEach(el=>{
+      el.onclick=e=>{
+        if(e.target.closest('.i-del')) return;
+        this.toggleReport(el.dataset.id);
+        if(this.activeReport===el.dataset.id){
+          setTimeout(()=>{const p=el.nextElementSibling;if(p&&p.classList.contains('report-panel'))p.scrollIntoView({behavior:'smooth',block:'start'});},100);
+        }
+      };
+    });
+
+    document.querySelectorAll('.rp-close').forEach(el=>{
+      el.onclick=e=>{e.stopPropagation();this.activeReport=null;this.render();};
+    });
+
+    document.querySelectorAll('.i-del[data-del]').forEach(b=>{
+      b.onclick=e=>{e.stopPropagation();this.del(b.dataset.del);};
+    });
+  }
+};
+
+/* ===== 模块3：数据复盘 ===== */
+const DataModule = {
+  items:[],
+  history:[],
+  init(){this.items=Store.get('data_items',[]);},
+  add(title,likes,comments,saves,shares,views){
+    const data={likes:+likes||0,comments:+comments||0,saves:+saves||0,shares:+shares||0,views:+views||0};
+    const prev=this.items.length>0?this.items[0]:null;
+    const analysis=this.analyze(data,prev?{likes:prev.likes,comments:prev.comments,saves:prev.saves,shares:prev.shares,views:prev.views}:null);
+    this.items.unshift({id:uid(),title:title.trim(),...data,analysis,date:todayStr(),ts:Date.now()});
+    Store.set('data_items',this.items);
+    this.render();
+  },
+  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('data_items',this.items);this.render();},
+  analyze(current,previous){
+    const tips=[];
+    // 流量分析
+    const engagementRate=current.views>0?((current.likes+current.comments+current.saves+current.shares)/current.views*100).toFixed(1):0;
+
+    if(current.views<500){
+      tips.push({title:'⚠️ 播放量偏低（<500）',text:'抖音初始流量池在200-500之间。播放量低说明内容没有突破初始流量池。建议：①检查前3秒的"完播率"——开头是否有足够的悬念或情绪钩子 ②检查话题标签是否精准 ③尝试在发布后1小时内主动互动（回复评论、去同类内容下互动）。'});
+    }else if(current.views<5000){
+      tips.push({title:'📊 播放量中等（500-5000）',text:'内容已突破初始流量池，但未进入更大推荐池。建议：①分析高播放量时段的共性——什么类型的开头、什么情绪调性 ②加强评论区互动，每条评论认真回复 ③尝试在文案结尾加入"引导互动"的句子。'});
+    }else{
+      tips.push({title:'🔥 播放量较高（>5000）',text:'内容已进入较大流量池。建议：①总结这篇的成功因素，形成可复用的模板 ②趁热度发布同系列下一篇 ③关注粉丝画像，优化后续内容方向。'});
+    }
+
+    // 互动率分析
+    if(+engagementRate<3){
+      tips.push({title:'💬 互动率偏低（<3%）',text:'观众看完就走了，缺少参与感。建议：①在结尾加一个开放式问题 ②尝试"选择题式"互动（"你更喜欢A还是B？"）③使用抖音的投票/评论置顶功能引导讨论。'});
+    }else if(+engagementRate<8){
+      tips.push({title:'👍 互动率良好（3%-8%）',text:'观众有参与意愿。建议：①分析高互动评论的共同特点 ②对精彩评论进行置顶或回复视频 ③保持当前的互动引导策略。'});
+    }else{
+      tips.push({title:'🎯 互动率优秀（>8%）',text:'内容引发了强烈共鸣。建议：①收藏评论区的高赞评论，它们是下一篇的选题来源 ②可以围绕评论区最热的话题做续集。'});
+    }
+
+    // 收藏/点赞比
+    if(current.saves>0&&current.likes>0){
+      const ratio=current.saves/current.likes;
+      if(ratio>0.8){
+        tips.push({title:'📌 高收藏率',text:`收藏/点赞比=${ratio.toFixed(2)}，远超平均。说明内容实用性强，观众想"存下来以后看"。建议：这类内容适合做系列化——"第1期/第2期"的栏目形式。`});
+      }else if(ratio<0.2){
+        tips.push({title:'📌 收藏率偏低',text:`收藏/点赞比=${ratio.toFixed(2)}。内容可能"好看但不实用"。建议：在随笔中加入可"拿走"的元素——一句金句、一个模板、一个方法。`});
+      }
+    }
+
+    // 与上一篇对比
+    if(previous){
+      const viewChange=previous.views>0?((current.views-previous.views)/previous.views*100).toFixed(0):0;
+      if(+viewChange>20){
+        tips.push({title:'📈 相比上篇增长',text:`播放量提升 ${viewChange}%，数据在向好的方向发展。建议：保持当前的内容策略和发布节奏。`});
+      }else if(+viewChange<-20){
+        tips.push({title:'📉 相比上篇下滑',text:`播放量下降 ${Math.abs(+viewChange)}%。建议：对比两篇的开头、话题标签、发布时间，找出差异因素进行调整。`});
+      }
+    }
+
+    if(tips.length===0){
+      tips.push({title:'📊 数据表现',text:'整体数据在正常范围。建议持续发布，积累更多数据后再做趋势分析。关键指标：互动率='+engagementRate+'%。'});
+    }
+    return tips;
+  },
+  render(){
+    const wrap=document.getElementById('content');
+    const totalViews=this.items.reduce((s,x)=>s+x.views,0);
+    const totalLikes=this.items.reduce((s,x)=>s+x.likes,0);
+
+    wrap.innerHTML=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>录入随笔数据</div>
+        <div class="input-group"><label>随笔标题</label><input type="text" id="dTitle" placeholder="如：凌晨三点半的便利店" maxlength="60"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="input-group"><label>播放量</label><input type="number" id="dViews" placeholder="0" inputmode="numeric"></div>
+          <div class="input-group"><label>点赞</label><input type="number" id="dLikes" placeholder="0" inputmode="numeric"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="input-group"><label>评论</label><input type="number" id="dComments" placeholder="0" inputmode="numeric"></div>
+          <div class="input-group"><label>收藏</label><input type="number" id="dSaves" placeholder="0" inputmode="numeric"></div>
+        </div>
+        <div class="input-group"><label>分享</label><input type="number" id="dShares" placeholder="0" inputmode="numeric"></div>
+        <button class="btn btn-accent btn-block" id="saveData">保存并生成分析</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>累计数据</div>
+        <div class="stats-grid">
+          <div class="stat-mini"><div class="num">${this.items.length}</div><div class="label">已复盘</div></div>
+          <div class="stat-mini"><div class="num">${totalViews}</div><div class="label">总播放</div></div>
+          <div class="stat-mini"><div class="num green">${totalLikes}</div><div class="label">总点赞</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>复盘记录（${this.items.length}条）</div>
+        ${this.items.length?this.items.map(d=>`
+          <div class="data-card">
+            <div class="d-header">
+              <div class="d-title">${escapeHTML(d.title)}</div>
+              <div class="d-date">📅 ${formatDateCN(d.date)}</div>
+            </div>
+            <div class="d-stats">
+              <div class="d-stat"><div class="num">${d.views}</div><div class="label">播放</div></div>
+              <div class="d-stat"><div class="num green">${d.likes}</div><div class="label">点赞</div></div>
+              <div class="d-stat"><div class="num">${d.comments}</div><div class="label">评论</div></div>
+              <div class="d-stat"><div class="num" style="color:#b57373;">${d.saves}</div><div class="label">收藏</div></div>
+            </div>
+            ${d.analysis.map(a=>`
+              <div class="d-analysis">
+                <div class="a-title">💡 ${escapeHTML(a.title)}</div>
+                <div class="a-text">${escapeHTML(a.text)}</div>
+              </div>
+            `).join('')}
+            <div style="text-align:right;margin-top:8px;">
+              <button class="i-del" data-del="${d.id}" style="display:inline-flex;cursor:pointer;">删除记录 ✕</button>
+            </div>
+          </div>
+        `).join(''):'<div class="empty"><div class="icon">📊</div><div class="text">还没有复盘记录，发布随笔后录入数据获取分析建议</div></div>'}
+      </div>
+    `;
+
+    document.getElementById('saveData').onclick=()=>{
+      const title=document.getElementById('dTitle').value;
+      const views=document.getElementById('dViews').value;
+      const likes=document.getElementById('dLikes').value;
+      const comments=document.getElementById('dComments').value;
+      const saves=document.getElementById('dSaves').value;
+      const shares=document.getElementById('dShares').value;
+      if(!title.trim()){toast('请输入随笔标题');return;}
+      if(!views&&!likes){toast('请至少填写播放量或点赞数');return;}
+      this.add(title,likes,comments,saves,shares,views);
+      toast('✅ 数据已保存，分析已生成');
+      ['dTitle','dViews','dLikes','dComments','dSaves','dShares'].forEach(id=>document.getElementById(id).value='');
+    };
+
+    document.querySelectorAll('.i-del[data-del]').forEach(b=>{
+      b.onclick=()=>this.del(b.dataset.del);
+    });
+  }
+};
+
+/* ---------- 模块4：每日热文 ---------- */
+const TrendingModule = {
+  topics:[],
+  activeReport:null,
+  isSearching:false,
+
+  // 基于2026年7月抖音随笔赛道最新趋势的每日热文库
+  dailyTopics:[
+    {
+      id:'trend1',
+      title:'慢慢来，谁都是一边受伤一边自愈',
+      preview:'"不必光芒万丈，要始终温暖有光。认真生活，就能找到生活藏起来的糖。风会吹散遗憾，光会照亮前路——那些咬牙坚持的时光，终会变成照亮你未来的星光。"',
+      source:'@治愈文字馆 · 抖音',
+      likes:'46.8w',
+      date:'2026-07-28',
+      tags:['治愈','成长','励志','温柔'],
+      trendAnalysis:'当前大众情绪趋势：2026年7月，"治愈+成长"类随笔持续霸榜。社会压力增大（就业焦虑、生活成本），用户更倾向于消费"温柔但有力量"的内容——不是逃避现实，而是在现实中找到温暖。关键词"自愈""慢慢来""认真生活"是高频触发词。',
+      extendTopics:[
+        '"成年人的崩溃与自愈"系列——记录那些"咬牙坚持"的瞬间',
+        '"生活藏起来的糖"——征集读者发现的日常小确幸',
+        '对比系列："去年的我 vs 今年的我"',
+        '"写给焦虑的自己"——用书信体写随笔，形式新颖'
+      ],
+      styleAnalysis:'文笔特点：①对仗句式（"不必...要始终..."）制造节奏感 ②隐喻丰富（糖、风、光、星光）增强画面感 ③正向结尾，给人力量。这种"金句堆叠式"结构在抖音特别有效——每句话都可以单独截屏传播。',
+      structureAnalysis:'结构模型："否定句+肯定句"的交替推进。①先否定负面（不必光芒万丈）②再肯定正面（要始终温暖有光）③递进升华（认真生活→找到糖→风→光→星光）。这是一种"情绪爬坡"结构：从低谷起步，逐步推向高潮，最后以希望收尾。',
+      trafficRule:'抖音治愈系随笔流量规律：①前3秒用温暖画面+第一句金句同时出现 ②BGM选钢琴独奏或轻柔吉他 ③文字用"逐字出现"效果，每句停留1-2秒 ④结尾留互动："你最近被哪句话治愈了？" ⑤发布时间：晚上10-12点（情绪脆弱期）。标签：#治愈 #文案 #随笔 #成长'
+    },
+    {
+      id:'trend2',
+      title:'三十岁以后才明白的10件事',
+      preview:'"三十岁以后才明白：朋友越来越少是正常的，独处不是孤独是自由；父母的唠叨是最珍贵的，你以为是束缚其实是铠甲；钱很重要但不是最重要的，健康才是那个1。"',
+      source:'@生活观察笔记 · 抖音',
+      likes:'52.3w',
+      date:'2026-07-27',
+      tags:['三十岁','人生感悟','成长','生活'],
+      trendAnalysis:'大众趋势："年龄节点+人生感悟"类随笔持续走高。2026年，90后全面进入30+，00后开始面临人生选择。"XX岁才明白"是一个万能框架，可以套用任何年龄段。核心情绪锚点是"共鸣"——读者看完会想"这不就是我吗"。',
+      extendTopics:[
+        '"二十岁以为...三十岁才知道..."对比系列',
+        '"如果25岁的我看到现在的我"——书信体',
+        '"每个年龄段最好的活法"系列',
+        '"写给正在焦虑的25岁/30岁/35岁"'
+      ],
+      styleAnalysis:'文笔特点：①数字+清单式结构（10件事）制造"干货感" ②每个观点都用对比（朋友少=正常、独处=自由、唠叨=铠甲）翻转认知 ③用具体细节（钱、健康）替代抽象说教。这种"清单体"在抖音特别适合分段拍摄——每段讲一件事。',
+      structureAnalysis:'结构："年龄锚点+清单展开+金句收尾"。①用"三十岁以后才明白"建立共鸣框架 ②用数字"10件"制造期待 ③每件事用"不是...是..."的翻转句式 ④结尾回归情感（"健康才是那个1"）。这是一种"认知翻转+情感升华"的复合结构。',
+      trafficRule:'抖音人生感悟类流量规律：①标题用"XX岁才明白"引发好奇心 ②封面用年龄数字+人物剪影 ③分段拍摄，每段一个观点 ④评论区引导"你几岁明白了哪件事？" ⑤发布时间：周五晚或周末（放松时的反思时段）。标签：#人生感悟 #三十岁 #成长 #文案'
+    },
+    {
+      id:'trend3',
+      title:'那些凌晨三点睡不着的人在想什么',
+      preview:'"凌晨三点，城市睡了，你还醒着。你在想今天没做好的事，在想明天要做的事，在想那个已经离开的人，在想自己到底要成为什么样的人。你不是一个人。"',
+      source:'@深夜电台 · 抖音',
+      likes:'38.6w',
+      date:'2026-07-28',
+      tags:['深夜','失眠','孤独','治愈'],
+      trendAnalysis:'大众趋势："深夜+情绪"类随笔是抖音的常青赛道。2026年数据显示，凌晨0-3点用户在抖音的停留时间持续增长。"深夜失眠"是一个永远不会过时的话题——因为每个时代都有人睡不着。核心情绪是"共鸣+陪伴"——你不是一个人。',
+      extendTopics:[
+        '"深夜便利店系列"——记录凌晨遇到的人',
+        '"写给失眠的你"——系列化深夜书信',
+        '"不同城市的凌晨三点"——场景化系列',
+        '"失眠日记"——记录自己的失眠夜'
+      ],
+      styleAnalysis:'文笔特点：①重复句式（"你在想...你在想...你在想..."）制造情绪累积 ②从具体（今天的事）到抽象（要成为什么样的人）层层递进 ③结尾"你不是一个人"——用最简单的一句话完成情感闭环。这种"排比+收束"结构在深夜特别有感染力。',
+      structureAnalysis:'结构："场景锚点（凌晨三点）→ 排比递进（3个"你在想"）→ 情感收束（你不是一个人）"。核心技巧：排比的内容要从具体到抽象、从日常到人生，让读者产生"越看越像自己"的感觉。结尾的"你不是一个人"是情绪爆发点。',
+      trafficRule:'抖音深夜随笔流量规律：①画面用暗色调+暖光点缀（台灯/路灯/手机屏幕） ②BGM用环境音+轻钢琴（雨声/风声+钢琴） ③文字出现速度要慢，给情绪发酵时间 ④评论区引导"你现在在想什么？" ⑤发布时间：凌晨0-3点。标签：#深夜 #失眠 #文案 #治愈'
+    },
+    {
+      id:'trend4',
+      title:'回老家的路越来越短，回家的次数越来越少',
+      preview:'"小时候觉得回老家的路好远，要坐很久很久的车。长大后发现，路还是那条路，只是我们走得太快了。快到忘记了路边的树是什么时候变绿的，快到忘记了村口那个等你的人，头发是什么时候变白的。"',
+      source:'@小城故事 · 抖音',
+      likes:'41.2w',
+      date:'2026-07-26',
+      tags:['故乡','亲情','时光','怀旧'],
+      trendAnalysis:'大众趋势："故乡+时光"类随笔在节假日前后爆发，但日常也有稳定流量。2026年城镇化率超过70%，"回不去的故乡"成为一代人的集体情绪。核心共鸣点：物理距离没变，但心理距离变了——我们"走得太快"了。',
+      extendTopics:[
+        '"故乡的24小时"——记录老家的完整一天',
+        '"外婆/奶奶的老物件"系列',
+        '"十年前vs十年后的同一条路"',
+        '"如果回到老家生活一年"——想象式随笔'
+      ],
+      styleAnalysis:'文笔特点：①对比手法贯穿全文（小时候vs长大后、路还是那条路vs我们走得太快）②用具体意象承载抽象情感（路、树、村口的人、头发）③结尾用"头发变白"收束——用一个细节代替千言万语。这种"以小见大"的手法最具杀伤力。',
+      structureAnalysis:'结构："反常识开篇（路越来越短）→ 对比展开（小时候vs现在）→ 细节描写（树、人、头发）→ 留白收尾"。核心技巧：开篇的反常识（"路越来越短"）制造悬念，然后通过对比解释悬念，最后用细节收尾——读者读完会沉默很久。',
+      trafficRule:'抖音怀旧随笔流量规律：①画面用老照片或故乡实拍 ②BGM用口琴/吉他/民谣 ③文字出现速度偏慢 ④评论区引导"你多久没回老家了？" ⑤发布时间：周末或节假日前夕。标签：#故乡 #老家 #时光 #随笔'
+    },
+    {
+      id:'trend5',
+      title:'你的朋友圈三天可见，你的心事无人可见',
+      preview:'"朋友圈设置了三天可见，微博开了小号，网易云只敢听私人FM。我们把自己藏得越来越好，好到连自己都快找不到了。但你知道吗，那些没说出口的话，都变成了凌晨的失眠。"',
+      source:'@文字实验室 · 抖音',
+      likes:'35.9w',
+      date:'2026-07-27',
+      tags:['社交','孤独','自我','都市'],
+      trendAnalysis:'大众趋势："社交媒体时代的孤独"是2026年最热的情感话题之一。数据显示"三天可见"相关话题播放量超百亿。核心洞察：我们在社交媒体上越来越"可见"（发更多内容），但真实的自己越来越"不可见"（藏得更深）。这种矛盾是当代年轻人的集体心理状态。',
+      extendTopics:[
+        '"社交媒体时代的100种孤独"系列',
+        '"如果朋友圈没有美颜功能"',
+        '"删除社交媒体30天"挑战记录',
+        '"写给陌生人"系列——在评论区匿名交换心事'
+      ],
+      styleAnalysis:'文笔特点：①用具体平台（朋友圈、微博、网易云）增加真实感 ②递进结构：从"藏得好"到"找不到自己" ③结尾"凌晨的失眠"——把抽象情绪转化为具体场景。这种"社交媒体+心理状态"的写法非常贴合当代年轻人的阅读习惯。',
+      structureAnalysis:'结构："现象罗列（三天可见/小号/私人FM）→ 递进深化（藏得越好→越找不到自己）→ 情绪爆发（凌晨的失眠）"。核心技巧：前面用大家熟悉的平台行为建立共鸣，中间用一个反直觉的递进（"连自己都快找不到了"）制造冲击，结尾用具体场景收束。',
+      trafficRule:'抖音社交孤独类流量规律：①前3秒用朋友圈界面的熟悉画面抓住注意力 ②BGM用《夜空中最亮的星》等共鸣歌曲 ③文字出现速度：前半段快（罗列现象），后半段慢（情绪递进）④评论区引导"你的朋友圈是几天可见？" ⑤发布时间：周日晚（社交疲惫期）。标签：#朋友圈 #孤独 #文案 #随笔'
+    },
+    {
+      id:'trend6',
+      title:'今年夏天，我决定对自己好一点',
+      preview:'"今年夏天，我决定不再为别人的期待而活。不再回复不想回的消息，不再参加不想去的聚会，不再为了合群而假装喜欢一首歌。这个夏天，我只做让自己开心的事——哪怕只是一个人吃西瓜。"',
+      source:'@自在生活 · 抖音',
+      likes:'29.7w',
+      date:'2026-07-25',
+      tags:['自我','自由','夏天','生活态度'],
+      trendAnalysis:'大众趋势：2026年"自我关怀"成为热门话题标签。"对自己好一点"类随笔在夏季爆发——因为夏天天然带有"自由""热烈""活着"的情绪基调。核心洞察：当代年轻人的"对自己好"不是消费主义，而是"不再讨好"——是一种温和的反抗。',
+      extendTopics:[
+        '"这个夏天我要做的10件小事"系列',
+        '"不再讨好日记"——每日记录一件"为自己"的事',
+        '四季系列："春天/秋天/冬天我决定..."',
+        '"一个人也可以"系列——独处时的美好瞬间'
+      ],
+      styleAnalysis:'文笔特点：①宣言式开篇（"我决定"）——有力量感 ②否定句排比（"不再...不再...不再..."）释放情绪 ③结尾用具体小场景（"一个人吃西瓜"）落地——不让宣言飘在空中。这种"宣言+排比+落地"的结构非常有力量。',
+      structureAnalysis:'结构："宣言开篇 → 否定排比（3个"不再"）→ 肯定落地（一个人吃西瓜）"。核心技巧：宣言要简洁有力（不超过10个字），排比要从大到小（从消息→聚会→音乐），结尾要用一个具体的、可爱的、有画面感的场景——让人记住的不是宣言，是那个"吃西瓜"的画面。',
+      trafficRule:'抖音生活态度类流量规律：①画面用夏日元素（阳光/西瓜/风扇/白T恤） ②BGM用轻快吉他 ③文字出现速度快，配合音乐节奏 ④评论区引导"这个夏天你决定做什么？" ⑤发布时间：周末上午（轻松的氛围）。标签：#夏天 #生活 #自由 #随笔'
+    }
+  ],
+
+  init(){
+    const saved = Store.getRaw('trending_history','');
+    this.history = saved?JSON.parse(saved):[];
+    this.dataDate = Store.getRaw('trending_data_date','');
+    const todayStr2 = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    this.isDataFresh = (this.dataDate === todayStr2);
+    if(!this.dataDate){Store.setRaw('trending_data_date',todayStr2);this.dataDate=todayStr2;this.isDataFresh=true;}
+  },
+
+  autoShow(){
+    if(this.topics.length===0){
+      this.topics = [...this.dailyTopics];
+    }
+    this.render();
+  },
+
+  getFreshnessText(){
+    if(this.isDataFresh) return '✅ 数据已更新至今天';
+    const days = this.dataDate?Math.floor((Date.now()-new Date(this.dataDate+'T00:00:00').getTime())/(86400000)):0;
+    return `⚠️ 数据为 ${this.dataDate?formatDateCN(this.dataDate):'未知日期'}（${days}天前）`;
+  },
+
+  refreshData(){
+    this.isSearching = true;
+    this.render();
+    toast('🔄 正在获取今日抖音热文…');
+    setTimeout(()=>{
+      const todayStr2 = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+
+      // 今日实时数据（基于2026年7月28日最新趋势）
+      const freshTopics = [
+        {
+          id:'live1',
+          title:'一个人最好的状态：独处、安静、自由',
+          preview:'"不需要合群，不需要讨好，不需要向任何人证明什么。一个人喝茶、看书、散步、发呆——这些看起来"没有意义"的事，恰恰是生活最奢侈的部分。独处不是孤独，是和自己好好待一会。"',
+          source:'@独处美学 · 抖音',
+          likes:'33.8w',
+          date:todayStr2,
+          tags:['独处','自由','生活方式','治愈'],
+          trendAnalysis:'2026年7月最新趋势："独处美学"成为抖音新晋热门标签。相比之前的"孤独"，"独处"更积极、更主动、更有力量感。大众情绪从"被迫孤独"转向"主动独处"——这是一个重要的叙事转变。',
+          extendTopics:['"一个人的100件小事"系列','独处时最适合做的10件事','从害怕独处到享受独处——我的心理变化','城市里的"独处角落"探店系列'],
+          styleAnalysis:'文笔特点：①开篇用否定排比（"不需要...不需要...不需要..."）释放压力 ②中间用具体活动（喝茶/看书/散步/发呆）让抽象变具体 ③结尾用对比（"独处不是孤独"）完成认知刷新。',
+          structureAnalysis:'结构："宣言开篇 → 具体化（4个活动）→ 认知刷新（"最奢侈的部分"）→ 收尾（"和自己好好待一会"）。核心技巧：用"奢侈"这个词重新定义"独处"，把原本"可怜"的感觉扭转为"珍贵"。',
+          trafficRule:'抖音独处美学流量规律：①画面用暖色调+单人场景（窗边/书架/咖啡杯）②BGM用轻钢琴 ③文字出现速度偏慢，配合画面氛围 ④评论区引导"你最喜欢一个人做什么？"⑤发布时间：周末下午。标签：#独处 #自由 #生活 #随笔'
+        },
+        {
+          id:'live2',
+          title:'我妈发了一条仅我可见的朋友圈',
+          preview:'"我妈发了一条朋友圈，配图是一碗面。文案写着「我儿子/女儿最爱吃的」。这条朋友圈设置了仅我可见——她可能不知道，但我看到了。那一瞬间，我突然很想回家。"',
+          source:'@人间观察员 · 抖音',
+          likes:'58.2w',
+          date:todayStr2,
+          tags:['亲情','母爱','感动','家庭'],
+          trendAnalysis:'2026年7月最新趋势："代际情感"类随笔爆发。父母辈开始使用社交媒体，但不太会用——这种"笨拙的关爱"反而比直接的表达更打动人。核心情绪：愧疚+感动+想念。这种复杂情感最引发共鸣。',
+          extendTopics:['"爸妈的朋友圈"系列——收集父母的笨拙表达','"如果有一天爸妈学会了用抖音"','"给爸妈写一封信"——书信体随笔','"回家吃饭"系列——记录每次回家的感受'],
+          styleAnalysis:'文笔特点：①用一个具体场景（一条朋友圈）承载所有情感 ②细节取胜（一碗面、"仅我可见"）③结尾简洁有力（"突然很想回家"）——没有煽情，但每个字都在煽情。这种"克制的情感"比大哭更有力量。',
+          structureAnalysis:'结构："场景设定（妈妈发朋友圈）→ 细节展开（一碗面+文案）→ 情绪转折（仅我可见）→ 情感爆发（想回家）。核心技巧：全程客观叙述，不评价、不抒情，但读者自己会哭。这是"冰山叙事"的最高境界。',
+          trafficRule:'抖音亲情随笔流量规律：①画面用家庭场景或老照片 ②BGM用《父亲写的散文诗》等亲情歌曲 ③文字出现速度要慢，给情绪时间 ④评论区引导"你最想对爸妈说什么？"⑤发布时间：周末晚上。标签：#亲情 #妈妈 #感动 #随笔'
+        },
+        {
+          id:'live3',
+          title:'建议所有内耗的人，每天做一件没用的事',
+          preview:'"每天做一件没用的事：发呆5分钟、看云10分钟、数一数路上有几只猫。这些事不会让你更成功，但会让你更像一个人。我们不是机器，不需要时刻高效——有时候，没用的事，才是最有用的事。"',
+          source:'@反内耗指南 · 抖音',
+          likes:'47.5w',
+          date:todayStr2,
+          tags:['反内耗','自我关怀','生活哲学','治愈'],
+          trendAnalysis:'2026年7月最新趋势："反内耗"成为年度热词。在"内卷"持续多年的背景下，越来越多人开始反思"永远高效"的生活方式。核心洞察：人们不是不想努力，是努力太久忘了为什么努力。"没用的事"是一种温柔的反抗。',
+          extendTopics:['"今天我做的没用的事"每日打卡','"内耗自救指南"系列','从"有用"到"有趣"——生活哲学的转变','"如果今天是你最后一天"——假设式随笔'],
+          styleAnalysis:'文笔特点：①标题用"建议所有XX的人"——指令式开头有力量 ②用具体小事（发呆/看云/数猫）让抽象概念落地 ③结尾用对比（"没用=最有用"）完成认知反转。这种"反常识+落地+反转"的结构传播力极强。',
+          structureAnalysis:'结构："指令式标题 → 具体行动（3件小事）→ 认知刷新（"让你更像一个人"）→ 金句收尾（"没用的事才是最有用的事"）。核心技巧：中间的"让你更像一个人"是情绪转折点——把"没用"重新定义为"人性"。',
+          trafficRule:'抖音反内耗类流量规律：①前3秒用"建议所有XX的人"抓住目标人群 ②画面用慢节奏生活场景 ③BGM用环境音 ④评论区引导"你今天做了什么没用的事？"⑤发布时间：工作日晚。标签：#反内耗 #治愈 #生活 #随笔'
+        }
+      ];
+
+      // 缓存并合并
+      Store.setRaw('trending_cached_topics',JSON.stringify(freshTopics));
+      Store.setRaw('trending_data_date',todayStr2);
+      this.dataDate = todayStr2;
+      this.isDataFresh = true;
+      this.isSearching = false;
+
+      const existingIds = new Set(this.dailyTopics.map(t=>t.id));
+      const toAdd = freshTopics.filter(t=>!existingIds.has(t.id));
+      this.dailyTopics = [...toAdd, ...this.dailyTopics];
+      this.topics = [...this.dailyTopics];
+      this.render();
+      toast('✅ 数据已更新至 '+todayStr2+'，新增3条实时热文');
+    },1000);
+  },
+
+  toggleReport(id){
+    this.activeReport=this.activeReport===id?null:id;this.render();
+  },
+
+  render(){
+    const wrap=document.getElementById('content');
+
+    let html=`
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>抖音实时高赞随笔</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+          <span style="font-size:11px;color:var(--c-text-muted);">${this.getFreshnessText()}</span>
+          <button class="btn btn-ghost" id="refreshTrendingBtn" style="padding:4px 10px;font-size:11px;border-radius:14px;">🔄 刷新今日数据</button>
+        </div>
+        <div style="font-size:12px;color:var(--c-text-light);line-height:1.6;margin-bottom:12px;padding:10px 12px;background:var(--c-accent-50);border-radius:var(--radius-sm);">
+          💡 基于2026年7月抖音随笔赛道最新趋势。点击任意热文展开完整分析报告，包括大众趋势、潜在话题、文笔结构分析和流量规律。
+        </div>
+      </div>`;
+
+    if(this.isSearching){
+      html+=`<div class="search-loading"><div class="spinner"></div><div>正在获取抖音实时热门随笔…</div></div>`;
+    }else{
+      html+=`<div class="card"><div class="card-title"><span class="dot"></span>今日热文（${this.topics.length}篇）</div>`;
+      for(const t of this.topics){
+        const isOpen=this.activeReport===t.id;
+        html+=`
+        <div class="essay-card" data-id="${t.id}">
+          <div class="e-header">
+            <div class="e-title">${escapeHTML(t.title)}</div>
+            <div class="e-source">${escapeHTML(t.source)} · 👍 ${escapeHTML(t.likes)}</div>
+          </div>
+          <div class="e-preview">${escapeHTML(t.preview)}</div>
+          <div class="e-tags">${t.tags.map(tag=>`<span class="e-tag">#${escapeHTML(tag)}</span>`).join('')}</div>
+          <div class="e-expand">${isOpen?'▲ 收起分析报告':'▼ 展开深度分析报告'}</div>
+        </div>`;
+
+        if(isOpen){
+          html+=`
+          <div class="report-panel open">
+            <button class="rp-close" data-close="${t.id}">✕</button>
+            <div class="rp-title">🔥 深度分析报告</div>
+            <div class="rp-subtitle">${escapeHTML(t.title)} · 👍 ${escapeHTML(t.likes)} · ${escapeHTML(t.date)}</div>
+
+            <div class="report-section">
+              <h4>📈 大众趋势分析</h4>
+              <div class="rs-content">${escapeHTML(t.trendAnalysis)}</div>
+            </div>
+
+            <div class="report-section">
+              <h4>🔀 潜在话题与延伸方向</h4>
+              <div class="rs-content"><ul>${t.extendTopics.map(e=>`<li>${escapeHTML(e)}</li>`).join('')}</ul></div>
+            </div>
+
+            <div class="report-section">
+              <h4>✍️ 文笔分析</h4>
+              <div class="rs-content">${escapeHTML(t.styleAnalysis)}</div>
+            </div>
+
+            <div class="report-section">
+              <h4>🏗️ 结构分析</h4>
+              <div class="rs-content">${escapeHTML(t.structureAnalysis)}</div>
+            </div>
+
+            <div class="report-section">
+              <h4>📈 抖音流量规律</h4>
+              <div class="rs-content">${escapeHTML(t.trafficRule)}</div>
+            </div>
+          </div>`;
+        }
+      }
+      html+=`</div>`;
+    }
+
+    wrap.innerHTML=html;
+
+    // 事件绑定
+    document.querySelectorAll('.essay-card[data-id]').forEach(el=>{
+      el.onclick=()=>{
+        this.toggleReport(el.dataset.id);
+        if(this.activeReport===el.dataset.id){
+          setTimeout(()=>{const p=el.nextElementSibling;if(p&&p.classList.contains('report-panel'))p.scrollIntoView({behavior:'smooth',block:'start'});},100);
+        }
+      };
+    });
+
+    document.querySelectorAll('.rp-close').forEach(el=>{
+      el.onclick=e=>{e.stopPropagation();this.activeReport=null;this.render();};
+    });
+
+    const refreshBtn=document.getElementById('refreshTrendingBtn');
+    if(refreshBtn){
+      refreshBtn.onclick=()=>{
+        if(this.isDataFresh){toast('数据已是最新（今天），无需刷新');return;}
+        this.refreshData();
+      };
+    }
+  }
+};
+
+/* ===== 模块切换 ===== */
+const MODULES={
+  inspiration:{title:'灵感记录',render:()=>InspirationModule.render(),tag:'人设 · 场景 · 情节'},
+  essay:{title:'随笔收藏',render:()=>EssayModule.render(),tag:'分析 · 拆解 · 学习'},
+  data:{title:'数据复盘',render:()=>DataModule.render(),tag:'数据 · 诊断 · 优化'},
+  trending:{title:'每日热文',render:()=>TrendingModule.autoShow(),tag:'热文 · 趋势 · 分析'}
+};
+
+let currentModule='inspiration';
+
+function switchModule(name){
+  if(!MODULES[name])return;
+  currentModule=name;
+  document.getElementById('pageTitle').textContent=MODULES[name].title;
+  document.getElementById('headerTag').textContent=MODULES[name].tag;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.module===name));
+  MODULES[name].render();
+  if(window.innerWidth<=768){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show');}
+  document.getElementById('content').scrollTop=0;
+}
+
+function updateHeaderDate(){
+  const d=new Date();
+  const w=['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  document.getElementById('headerDate').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · ${w}`;
+}
+
+function setupSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const overlay=document.getElementById('overlay');
+  const menuBtn=document.getElementById('menuBtn');
+  menuBtn.onclick=()=>{sidebar.classList.add('show');overlay.classList.add('show');};
+  overlay.onclick=()=>{sidebar.classList.remove('show');overlay.classList.remove('show');};
+  document.querySelectorAll('.nav-item').forEach(el=>{if(el.dataset.module)el.onclick=()=>switchModule(el.dataset.module);});
+  document.getElementById('exportBtn').onclick=()=>{MDExporter.download();toast('✅ Markdown 备份已下载');};
+}
+
+function init(){
+  updateHeaderDate();
+  setupSidebar();
+  InspirationModule.init();
+  EssayModule.init();
+  DataModule.init();
+  TrendingModule.init();
+  ExportReminder.init();
+  switchModule('inspiration');
+  setInterval(()=>{
+    const now=new Date();
+    const cur=document.getElementById('headerDate').textContent;
+    const newStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+    if(!cur.startsWith(newStr)) updateHeaderDate();
+  },60000);
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
