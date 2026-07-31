@@ -585,7 +585,8 @@ const MDExporter = {
     const inspos=Store.get('inspirations_v2',[]);
     for(const i of inspos){
       const dateStr=i.createdAt?formatDateCN(i.createdAt.slice(0,10)):'未知日期';
-      md+=`### 📌 ${escapeHTML(i.source||'日常')} — ${dateStr}\n\n`;
+      const typeLabelMd = i.type ? (InspirationModule.TYPE_LABELS[i.type] || '其他') : '其他';
+      md+=`### ${typeLabelMd} · ${escapeHTML(i.source||'日常')} — ${dateStr}\n\n`;
       md+=`${i.text}\n\n`;
       if(i.tags&&i.tags.length) md+=`**标签**：${i.tags.map(t=>'#'+t).join(' ')}\n\n`;
       if(i.analysis&&i.analysis.directions){
@@ -687,144 +688,497 @@ const ExportReminder = {
    ============================================================ */
 
 const InspirationModule = {
+  // ===== 状态 =====
   items: [],
   selectedIds: new Set(),
   activeAnalysisId: null,
   comboAnalysisResult: null,
 
-  DIRECTION_RULES: [
-    {
-      keywords: ['爱','喜欢','暗恋','失恋','分手','初恋','前任','心动','感情','关系','暧昧','表白','思念','忘记','再见','错过'],
-      directions: [
-        { title: '情感反转', angle: '将甜蜜瞬间变成告别序曲，用倒叙制造情感张力', opening: '他说的那句"晚安"，我后来才明白那是再也不会醒来的意思。' },
-        { title: '关系博弈', angle: '亲密关系中的权力角力，表面平静下的暗流涌动', opening: '我们之间的较量，从谁先发早安开始。今天我赢了。' },
-        { title: '遗憾清单', angle: '用清单体罗列关系中未曾说出口的话和事', opening: '我列了一张清单：1. 没来得及说的谢谢。2. 没勇气问的问题。3. 那天我应该握住的手。' },
-        { title: '第三视角', angle: '从旁观者角度叙述一段感情，保持克制距离', opening: '他们坐在咖啡馆的两端，像两本合上的书，中间隔着一整个书架的距离。' },
-        { title: '记忆错位', angle: '两个当事人对同一段关系的记忆完全不同', opening: '她说那是夏天。他坚持说是秋天。而照片上的日期是十二月。' },
-      ]
-    },
-    {
-      keywords: ['梦','奇怪','诡异','不记得','密码','地下室','黑暗','声音','门','脚步声','镜子','跟踪','失踪','死亡','消失','规则','第','必须','不能'],
-      directions: [
-        { title: '悬念递进', angle: '从日常小事引出逐渐失控的异常，每段揭开一层', opening: '第三天，我发现镜子里的自己比我晚了一秒。' },
-        { title: '真相倒置', angle: '结尾揭示叙述者才是异常本身，前面的铺垫都是伪装', opening: '他们一直在找我。但我已经在这里生活了七年，没有人发现我不是人。' },
-        { title: '规则陷阱', angle: '看似合理的规则背后隐藏着致命漏洞，主角利用漏洞反杀', opening: '规则第三条说"不要回头看"。但没说不能停下来。' },
-        { title: '日常裂缝', angle: '在最普通的生活场景中插入一个无法解释的细节', opening: '超市收银员扫码的时候，屏幕上显示的不是商品名，而是一个日期——我的生日。' },
-        { title: '群像悬疑', angle: '多角色接力叙事，每个视角揭示一部分真相', opening: '我们有五个人。每个人的手机里都收到了一张照片，照片上是我们在场的其中一个人——已经死了。' },
-      ]
-    },
-    {
-      keywords: ['日常','下班','地铁','便利店','窗','街道','周末','吃饭','咖啡','天气','路','回家','灯','电梯','手机','楼下','公交','散步','阳台','邻居','外卖','快递'],
-      directions: [
-        { title: '日常诗意', angle: '从最平凡的瞬间中提取出令人心动的美', opening: '黄昏六点的公交车上，阳光透过车窗，在每个人的脸上停留了恰好三秒。' },
-        { title: '荒诞日常', angle: '把日常行为推向极端，制造荒诞感', opening: '我决定用一周时间只跟外卖员说话。第七天的时候，他问我要不要一起去送外卖。' },
-        { title: '陌生人列传', angle: '每天观察一个陌生人，写一篇微型传记', opening: '她每天7:15出现在地铁站，左手拿伞，右手握一杯没喝过的咖啡。我给她写了七个版本的人生。' },
-        { title: '城市切片', angle: '截取城市某个瞬间，像拍一张照片一样写作', opening: '这座城市凌晨四点的样子：24小时便利店的灯光、清洁工的扫帚声、一个在路边吐的男人。' },
-        { title: '物品叙事', angle: '从一件日常物品出发，串联起关于人的故事', opening: '这把钥匙能开的门已经不在了。但它在我口袋里待了三年，磨成了一个光滑的圆。' },
-      ]
-    },
-    {
-      keywords: ['科技','AI','人工智能','机器人','未来','数据','代码','虚拟','现实','程序','算法','芯片','网络','系统','空间','飞船','外星','基因','克隆','穿越','时间','平行','维度','赛博','意识','上传','记忆','永生'],
-      directions: [
-        { title: '设定展开', angle: '从一个科幻设定切入日常场景，逐步揭示世界观', opening: '永生芯片普及的第一年，最畅销的商品变成了日记本——人们害怕忘记自己活了多少年。' },
-        { title: '世界观碰撞', angle: '两种截然不同的文明/技术体系在微观层面相遇', opening: '当最后一个纸质书读者去世的时候，云端图书馆里的一千万本书同时翻到了第一页。' },
-        { title: '技术伦理', angle: '聚焦一项新技术带来的道德困境和人性考验', opening: '记忆删除服务推出后，第一个顾客是一个七岁孩子的母亲。她选择删掉的不是痛苦，而是幸福。' },
-        { title: '近未来日常', angle: '描写5-10年后日常生活中的细微变化', opening: '2040年，人们不再说"你吃了吗"，而是"你今天同步了吗"。' },
-        { title: '反乌托邦切口', angle: '从一个普通人的视角切入一个反乌托邦设定', opening: '系统给我打了85分。85分意味着我可以继续活着，但不配拥有任何形式的快乐。我笑了，因为我作弊了。' },
-      ]
-    },
-    {
-      keywords: ['职场','工作','同事','加班','辞职','工资','面试','老板','领导','内卷','35','裁员','裸辞','副业','失业','搬砖','打工人','社畜','996','跳槽','考公','上岸'],
-      directions: [
-        { title: '职场切片', angle: '截取一个职场瞬间，以小见大揭示职场生态', opening: '会议室里十二个人，只有三个人在听。剩下的九个在算自己还能待多久。' },
-        { title: '时代隐喻', angle: '用个人职场经历折射更大的社会变迁', opening: '公司裁掉了整个创意部，换了一个AI。HR说这不是裁员，叫"结构性优化"。我翻开招聘软件，发现全行业都在优化。' },
-        { title: '逆袭叙事', angle: '从低谷到逆袭，用爽感驱动故事', opening: '被辞退的第三天，前公司最大的客户打来电话："你跟谁走，我跟谁走。"' },
-        { title: '荒诞职场', angle: '用夸张手法放大职场中的荒诞现象', opening: '新来的实习生第一天就问了一个问题：这里的加班文化，是真实的还是在拍纪录片？' },
-        { title: '离职叙事', angle: '从决定离职到离开的过程，做一次精神盘点', opening: '收拾工位用了十分钟。收拾这三年的记忆，用了三个月。' },
-      ]
-    },
-    {
-      keywords: ['末世','末日','丧尸','病毒','感染','生存','物资','囤货','基地','避难','安全','幸存','粮食','水','武器','广播','信号','废墟','荒原','营地','变异','进化'],
-      directions: [
-        { title: '末日日常', angle: '末日背景下普通人的一天，用日常感反衬危机', opening: '末世第三年，我最大的烦恼变成了牙膏快用完了。丧尸攻城都比这件事好处理。' },
-        { title: '囤货基建', angle: '聚焦末世中的建设与重建，从零开始建立秩序', opening: '我们在废弃图书馆建立了第一个定居点。分类法从杜威十进制变成了：武器区、医疗区、种子的位置绝对不能告诉任何人。' },
-        { title: '人性博弈', angle: '末世中资源匮乏时的人性考验', opening: '他说分我一半食物。条件是：我要帮他杀一个人。那个人是他的亲弟弟。' },
-        { title: '文明重生', angle: '末世多年后，新一代开始重建文明时的困惑', opening: '"妈妈，为什么书上写人以前每天要坐一个小时的车去一个叫公司的地方？" 我不知道怎么回答。' },
-      ]
-    },
-    {
-      keywords: ['修仙','修真','仙侠','灵气','丹药','筑基','金丹','元婴','渡劫','飞升','门派','功法','法宝','灵根','剑','修炼','道','仙人','魔','轮回','转世'],
-      directions: [
-        { title: '现代修仙', angle: '修仙体系融入现代社会，制造错位感', opening: '飞升失败后，我在人间找了一份程序员的工作。996不是最痛苦的——最痛苦的是隔壁工位的同事是筑基期，他不用睡觉。' },
-        { title: '反套路修仙', angle: '颠覆传统修仙叙事，用反套路制造新鲜感', opening: '穿越到修仙世界后，我发现自己是个废灵根。但没关系，我在前世是北大物理系的。灵气？不过是一种尚未被解释的能量形式。' },
-        { title: '赛博仙侠', angle: '科技与修仙的融合碰撞', opening: '当第一个金丹期修士被CT扫描后，人类终于明白了内丹的本质：一种高密度等离子体。修仙界慌了。' },
-      ]
-    },
-    {
-      keywords: ['悬疑','杀','凶手','侦探','证据','线索','嫌疑','警察','案件','尸体','血','秘密','谎言','真相','复仇','绑架','囚禁','监视','匿名','信','电话','录音','视频'],
-      directions: [
-        { title: '反转叙事', angle: '在短篇幅内完成至少一次认知反转', opening: '警察找到我的时候，我正在清理现场。但我不是凶手。我是来偷东西的。而真正的凶手——是死者的妻子。' },
-        { title: '不可靠叙述者', angle: '叙述者本身有问题，让读者逐渐发现叙述的裂缝', opening: '我是最好的证人。因为我什么都记得——包括那些没有发生过的事。' },
-        { title: '女性悬疑', angle: '以女性视角切入悬疑，探讨性别与权力议题', opening: '搬进新公寓的第一晚，我在衣柜里发现了一个日记本。每一篇都以"如果有一天我消失了"开头。上一任租客的名字和我的名字一模一样。' },
-      ]
-    },
-    {
-      keywords: ['西幻','魔法','精灵','龙','骑士','王国','城堡','领主','公主','王子','女巫','矮人','兽人','冒险','佣兵','神','诅咒','预言','剑与魔法','中世纪'],
-      directions: [
-        { title: '种田基建', angle: '穿越西幻世界后不冒险不战斗，专心搞基建种田', opening: '穿越成西幻世界的领主后，我发现领民们还在用木犁耕地。三年后，我的领地成了大陆最大的土豆出口国。精灵王来谈判贸易协定时，表情很复杂。' },
-        { title: '设定反写', angle: '颠覆经典西幻设定，用反套路制造趣味', opening: '勇者小队出发的第二天，魔王派人送来了一个花篮和一张卡片："欢迎来到魔界！这是您的七日游攻略。"' },
-        { title: '文明碰撞', angle: '西幻世界与现代/其他文明的相遇', opening: '当龙骑士遇上无人机编队的时候，龙先崩溃了。' },
-      ]
-    },
+  // ===== 类型标签 =====
+  TYPE_LABELS: { character:'人设', scene:'场景', visual:'画面', plot:'情节', other:'其他' },
+  TYPE_OPTIONS: [
+    { value:'character', label:'人设' },
+    { value:'scene', label:'场景' },
+    { value:'visual', label:'画面' },
+    { value:'plot', label:'情节' },
+    { value:'other', label:'其他' },
   ],
 
-  DEFAULT_DIRECTIONS: [
-    { title: '身份反转', angle: '揭示角色身份的另一面，制造意外感', opening: '所有人都在嘲笑她，直到那天她走进会议室，所有人都站了起来。' },
-    { title: '时间折叠', angle: '在一篇短文中跨越长时间跨度，浓缩人生', opening: '十岁那年种下的树，三十岁那年砍掉了。中间那二十年，树比我先长高。' },
-    { title: '场景锚点', angle: '以一个固定场景为锚，串联不同人物的故事', opening: '这把长椅上坐过的人：一个等求婚的男孩、一个等诊断结果的母亲、一个等死的老人。' },
-    { title: '对话叙事', angle: '纯用对话推进故事，用留白让读者想象画面', opening: '"你确定要这么做？""确定。""不后悔？""……再问我就后悔了。"' },
-    { title: '物件串联', angle: '一件物品在不同人之间流转，串联起多段人生', opening: '这本二手书里有五个人的笔记。四个人的故事我已经读懂了。第五个人只在第128页写了一个"唉"字。' },
-  ],
+  // ===== 元素提取词典 =====
+  LEXICON: {
+    identity: ['女孩','男孩','女人','男人','老人','少女','少年','母亲','父亲','外婆','奶奶','爷爷','老师','学生','医生','护士','警察','侦探','程序员','外卖员','收银员','老板','领导','同事','实习生','清洁工','司机','工人','商人','法医','摄影师','作家','画家','厨师','服务员','保安','工程师','会计','律师','记者','主播','打工人','社畜','自由职业者','全职妈妈','单亲妈妈'],
+    traits: ['孤独','冷漠','温柔','善良','残忍','聪明','狡猾','天真','世故','固执','软弱','坚强','敏感','迟钝','开朗','抑郁','焦虑','偏执','自卑','自恋','傲慢','谦逊','懦弱','勇敢','犹豫','果断','多疑','诚实','虚伪','热情','冷淡','浪漫','务实','理想主义','控制欲','占有欲'],
+    locations: ['便利店','地铁','公交','咖啡馆','餐厅','厨房','卧室','客厅','阳台','楼顶','楼下','街道','巷子','桥','公园','广场','医院','学校','办公室','会议室','电梯','走廊','地下室','阁楼','车库','仓库','书店','图书馆','车站','机场','码头','废墟','荒原','森林','海边','山顶','湖边','河边','田野','城市','小镇','城堡','宫殿','营地','出租屋','合租房','弄堂','胡同','城中村','写字楼'],
+    timeWords: ['凌晨','清晨','早晨','上午','中午','下午','傍晚','黄昏','深夜','半夜','午夜','黎明','拂晓','雨天','雪天','雾天','晴天','春天','夏天','秋天','冬天','盛夏','深秋','寒冬','梅雨','台风','暴雨','元旦','春节','清明','端午','中秋','国庆','圣诞','跨年','生日','纪念日','周一','周末','工作日','假期','去年','今年','明年','十年前','二十年前','小时候','长大后','年老时'],
+    environment: ['黑暗','光明','昏暗','明亮','阴冷','温暖','潮湿','干燥','寂静','嘈杂','空旷','拥挤','破旧','崭新','荒凉','繁华','冷清','雾气','烟尘','灰尘','蛛网','苔藓','锈迹','裂痕','废墟','杂草','枯木','积水','倒影','光影','霓虹','路灯','月光','阳光','烛光','火光','微光'],
+    colors: ['红','橙','黄','绿','蓝','紫','黑','白','灰','粉','褐','金','银','青','苍白','暗红','深蓝','浅绿','淡紫','暖色','冷色','渐变','斑驳','透明','浑浊','清澈','闪耀','暗淡','刺眼','柔和'],
+    actions: ['走','跑','坐','站','躺','蹲','跪','爬','倒','转','看','望','盯','瞥','听','闻','尝','触摸','握','抓','推','拉','举','放','捡','扔','敲','拍','打','哭','笑','叹','喘','颤抖','发抖','僵硬','转身','回头','低头','抬头','伸手','闭眼','睁眼','眨眼','呼吸','心跳','踉跄','徘徊'],
+    emotions: ['爱','恨','喜欢','讨厌','思念','忘记','心痛','心碎','孤独','寂寞','空虚','满足','幸福','悲伤','愤怒','恐惧','害怕','焦虑','不安','平静','激动','兴奋','失望','绝望','希望','迷茫','清醒','困惑','释然','执念','放下','不舍','留恋','后悔','愧疚','羞耻','骄傲','自卑','嫉妒','羡慕','崇拜','鄙视','怜悯','冷漠','暧昧','暗恋','失恋','分手','重逢','告别','离散'],
+    conflicts: ['但是','然而','可是','却','不过','竟然','居然','突然','忽然','直到','才发现','才知道','才明白','原来','其实','真相','秘密','谎言','欺骗','背叛','反转','转折','改变','决定','选择','放弃','坚持','逃离','追逐','对抗','冲突','争执','决裂','和解','妥协','屈服','反抗','揭露','隐藏','暴露','失踪','死亡','消失','出现','重现','回归','离开','到来','崩溃','爆发'],
+    causality: ['因为','所以','因此','导致','造成','引起','源于','由于','为了','以便','从而','于是','就','才','便','进而','结果是','原因是','目的是','意味着','暗示','象征'],
+    sensory: ['声音','气味','味道','温度','质感','粗糙','光滑','柔软','坚硬','刺骨','灼热','冰冷','腥味','香味','腐臭','霉味','潮湿','嗡嗡','轰鸣','沙沙','滴答','刺耳','悦耳','刺鼻','芬芳','苦涩','酸甜','麻辣','咸','淡','涩'],
+  },
 
+  // ===== 提取正则 =====
+  EXTRACT_PATTERNS: {
+    nameAction: /([\u4e00-\u9fa5]{2,3})(说|道|想|看|笑|哭|走|坐|站|问|答|叹|喊|转身|回头)/g,
+    turningSentence: /[^。？！]*?(直到|原来|其实|没想到|殊不知|才发现|才知道|才明白)[^。？！]*[。？！]/g,
+    suspenseSentence: /[^。]*?[？?][^。]*[。?？]/g,
+    dialogue: /[""''「」『』]([^""''「」『』]*)[""''「」『』]/g,
+  },
+
+  // ===== 初始化（含旧数据迁移）=====
   init() {
     this.items = Store.get('inspirations_v2', []);
+    let migrated = false;
+    this.items = this.items.map(item => {
+      if (!item.type) { item.type = 'other'; migrated = true; }
+      if (item.analysis && !item.analysis.elements) {
+        item.analysis.elements = this.summarizeElements(this.extractElements(item.text));
+        migrated = true;
+      }
+      return item;
+    });
+    if (migrated) Store.set('inspirations_v2', this.items);
     this.selectedIds = new Set();
     this.activeAnalysisId = null;
     this.comboAnalysisResult = null;
   },
 
-  _matchKeywords(text) {
+  // ===== 元素提取引擎 =====
+  extractElements(text) {
     const lower = text.toLowerCase();
-    let bestMatch = null;
-    let bestScore = 0;
-    for (const rule of this.DIRECTION_RULES) {
-      let score = 0;
-      for (const kw of rule.keywords) {
-        if (lower.includes(kw)) score++;
+    const elements = {
+      characters: [], locations: [], visuals: [], plots: [], emotions: [], rawSnippets: [], keywords: []
+    };
+
+    // 人物：身份词 + 附近的人称
+    for (const w of this.LEXICON.identity) {
+      const idx = lower.indexOf(w);
+      if (idx !== -1) {
+        const ctx = text.slice(Math.max(0, idx - 6), Math.min(text.length, idx + w.length + 10));
+        elements.characters.push({ identity: w, context: ctx });
+        elements.keywords.push(w);
       }
-      if (score > bestScore) { bestScore = score; bestMatch = rule; }
     }
-    return bestScore >= 2 ? bestMatch : null;
+    // 提取人名（正则）
+    let m;
+    const namePattern = this.EXTRACT_PATTERNS.nameAction;
+    namePattern.lastIndex = 0;
+    while ((m = namePattern.exec(text)) !== null) {
+      const name = m[1];
+      if (!elements.characters.some(c => c.name === name)) {
+        elements.characters.push({ name, action: m[2] });
+      }
+    }
+    // 性格特征
+    const foundTraits = [];
+    for (const w of this.LEXICON.traits) {
+      if (lower.includes(w)) foundTraits.push(w);
+    }
+    if (foundTraits.length > 0) {
+      if (elements.characters.length === 0) elements.characters.push({});
+      elements.characters[0].traits = foundTraits.slice(0, 5);
+      elements.keywords.push(...foundTraits.slice(0, 3));
+    }
+
+    // 场景：地点 + 时间 + 环境
+    for (const w of this.LEXICON.locations) {
+      if (lower.includes(w)) {
+        elements.locations.push({ place: w });
+        elements.keywords.push(w);
+      }
+    }
+    for (const w of this.LEXICON.timeWords) {
+      if (lower.includes(w)) {
+        const lastLoc = elements.locations[elements.locations.length - 1] || {};
+        if (!lastLoc.time) lastLoc.time = w;
+        else if (!elements.locations.some(l => l.time === w)) {
+          elements.locations.push({ time: w });
+        }
+        elements.keywords.push(w);
+      }
+    }
+    for (const w of this.LEXICON.environment) {
+      if (lower.includes(w)) {
+        const lastLoc = elements.locations[elements.locations.length - 1];
+        if (lastLoc) {
+          if (!lastLoc.environment) lastLoc.environment = w;
+        }
+        elements.keywords.push(w);
+      }
+    }
+    // 确保 locations 至少有一个空对象
+    if (elements.locations.length === 0) elements.locations.push({});
+
+    // 画面：色彩 + 动作
+    const foundColors = [];
+    for (const w of this.LEXICON.colors) {
+      if (lower.includes(w)) foundColors.push(w);
+    }
+    if (foundColors.length > 0) {
+      elements.visuals.push({ colors: foundColors.slice(0, 5) });
+      elements.keywords.push(...foundColors.slice(0, 3));
+    }
+    const foundActions = [];
+    for (const w of this.LEXICON.actions) {
+      if (lower.includes(w)) foundActions.push(w);
+    }
+    if (foundActions.length > 0) {
+      const lastVis = elements.visuals[elements.visuals.length - 1];
+      if (lastVis) lastVis.actions = foundActions.slice(0, 5);
+      else elements.visuals.push({ actions: foundActions.slice(0, 5) });
+      elements.keywords.push(...foundActions.slice(0, 3));
+    }
+    if (elements.visuals.length === 0) elements.visuals.push({});
+
+    // 情节：冲突 + 转折
+    const foundConflicts = [];
+    for (const w of this.LEXICON.conflicts) {
+      if (lower.includes(w)) foundConflicts.push(w);
+    }
+    if (foundConflicts.length > 0) {
+      elements.plots.push({ conflicts: foundConflicts.slice(0, 5) });
+      elements.keywords.push(...foundConflicts.slice(0, 3));
+    }
+    // 转折句
+    const turnPattern = this.EXTRACT_PATTERNS.turningSentence;
+    turnPattern.lastIndex = 0;
+    const turns = [];
+    while ((m = turnPattern.exec(text)) !== null) {
+      turns.push(m[0].trim());
+    }
+    if (turns.length > 0) {
+      const lastPlot = elements.plots[elements.plots.length - 1];
+      if (lastPlot) lastPlot.turningPoint = turns[0];
+      else elements.plots.push({ turningPoint: turns[0] });
+    }
+    const foundCausality = [];
+    for (const w of this.LEXICON.causality) {
+      if (lower.includes(w)) foundCausality.push(w);
+    }
+    if (foundCausality.length > 0) {
+      const lastPlot = elements.plots[elements.plots.length - 1];
+      if (lastPlot) lastPlot.causality = foundCausality.slice(0, 3);
+      else elements.plots.push({ causality: foundCausality.slice(0, 3) });
+    }
+    if (elements.plots.length === 0) elements.plots.push({});
+
+    // 情感
+    for (const w of this.LEXICON.emotions) {
+      if (lower.includes(w)) {
+        elements.emotions.push(w);
+        elements.keywords.push(w);
+      }
+    }
+    for (const w of this.LEXICON.sensory) {
+      if (lower.includes(w)) elements.keywords.push(w);
+    }
+    if (elements.emotions.length === 0) elements.emotions.push('某种情绪');
+
+    // 原文关键句（含最多元素的句子）
+    const sentences = text.split(/[。？！\n]/).filter(s => s.trim().length > 5);
+    const scored = sentences.map(s => {
+      let score = 0;
+      const sl = s.toLowerCase();
+      for (const cat of Object.values(this.LEXICON)) {
+        for (const w of cat) {
+          if (sl.includes(w)) score++;
+        }
+      }
+      return { text: s.trim(), score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    elements.rawSnippets = scored.slice(0, 3).map(s => s.text);
+
+    // 去重 keywords
+    elements.keywords = [...new Set(elements.keywords)];
+
+    return elements;
   },
 
-  generateAnalysis(text, source, tags) {
-    const rule = this._matchKeywords(text + ' ' + (tags || []).join(' '));
-    let pool = this.DEFAULT_DIRECTIONS;
-    if (rule) {
-      pool = [...rule.directions, ...this.DEFAULT_DIRECTIONS.slice(0, 2)];
-    }
-    const n = 3 + Math.floor(Math.random() * 3);
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    return { directions: shuffled.slice(0, n), generatedAt: new Date().toISOString() };
+  // 压缩元素为可存储摘要
+  summarizeElements(elements) {
+    return {
+      characters: (elements.characters || []).map(c => ({
+        name: c.name || '', identity: c.identity || '', traits: c.traits || []
+      })),
+      locations: (elements.locations || []).map(l => ({
+        place: l.place || '', time: l.time || '', environment: l.environment || ''
+      })),
+      visuals: (elements.visuals || []).map(v => ({
+        colors: v.colors || [], actions: v.actions || []
+      })),
+      plots: (elements.plots || []).map(p => ({
+        conflicts: p.conflicts || [], turningPoint: p.turningPoint || '', causality: p.causality || []
+      })),
+      emotions: elements.emotions || [],
+      rawSnippets: elements.rawSnippets || [],
+    };
   },
 
-  add(source, text, tags) {
+  // ===== 分析生成 =====
+  generateAnalysis(text, source, tags, type) {
+    type = type || 'other';
+    const elements = this.extractElements(text);
+    const generator = this.ANALYSIS_GENERATORS[type] || this.ANALYSIS_GENERATORS.other;
+    const directions = generator.call(this, elements, text, source, tags);
+    const n = Math.min(5, Math.max(3, directions.length));
+    return {
+      directions: directions.slice(0, n),
+      generatedAt: new Date().toISOString(),
+      type,
+      elements: this.summarizeElements(elements),
+    };
+  },
+
+  // ===== 按分类的分析生成器 =====
+  ANALYSIS_GENERATORS: {
+    character(elements, text, source, tags) {
+      const dirs = [];
+      const chars = elements.characters || [];
+      const firstChar = chars[0] || {};
+      const charName = firstChar.name || (firstChar.identity || '这个人');
+      const charIdentity = firstChar.identity || charName;
+      const traits = chars.flatMap(c => c.traits || []);
+      const topTrait = traits[0] || '不为人知的一面';
+      const emotion = (elements.emotions || ['某种执念'])[0];
+      const snippet = (elements.rawSnippets || [text.slice(0, 30)])[0] || text.slice(0, 20);
+      const loc = (elements.locations || [{}])[0];
+      const place = loc.place || '某个地方';
+
+      dirs.push({
+        title: '身份反转',
+        angle: `揭示「${charName}」表面之下的真实身份——那个${topTrait}的特质，其实是一段隐藏过去的保护色`,
+        opening: `所有人都以为${charName}只是个普通的${charIdentity || '人'}。直到那天，有人翻出了${charName}抽屉最底层的那张照片。`
+      });
+
+      if (charIdentity && charIdentity !== charName) {
+        dirs.push({
+          title: '隐藏身份',
+          angle: `让${charIdentity}这个身份本身成为一个谜——为什么选择这个身份？真实的${charName}在逃避什么？`,
+          opening: `${snippet}——但没有人知道，${charName}选择做${charIdentity}，是因为三年前的那件事。`
+        });
+      }
+
+      dirs.push({
+        title: '成长弧线',
+        angle: `围绕「${topTrait}」这一核心特质，设计一个从极端到转变的弧线——什么事件能击碎这层壳？`,
+        opening: `${charName}花了很长时间学会${topTrait}。打破它，只用了一个下午。`
+      });
+
+      if (chars.length >= 2) {
+        const char2 = chars[1];
+        const c2name = char2.name || char2.identity || '另一个人';
+        dirs.push({
+          title: '关系揭示',
+          angle: `${charName}与${c2name}之间的关系远比表面复杂——那段被刻意隐藏的关联，是整个故事的钥匙`,
+          opening: `${charName}和${c2name}相识多年。但直到今天，${charName}才知道${c2name}的真名。`
+        });
+      } else {
+        dirs.push({
+          title: '内心冲突',
+          angle: `将「${topTrait}」与「${emotion}」并置，制造内在撕裂——想成为的那个人，和真正是的那个人，正在打架`,
+          opening: `${charName}心里住着两个人。一个想往前走，一个死死拽着不放。${charName}不知道该恨哪一个。`
+        });
+      }
+
+      if (place && place !== '某个地方') {
+        dirs.push({
+          title: '日常裂缝',
+          angle: `在${place}这个日常场景中，${charName}的一个反常举动撕开了生活的表皮`,
+          opening: `${charName}每天出现在${place}。直到那天，${charName}没有来。第二天，${charName}的照片出现在了别的地方。`
+        });
+      }
+
+      return dirs;
+    },
+
+    scene(elements, text, source, tags) {
+      const dirs = [];
+      const locs = elements.locations || [{}];
+      const firstLoc = locs[0];
+      const place = firstLoc.place || '这个场景';
+      const time = firstLoc.time || '某个时刻';
+      const env = firstLoc.environment || '';
+      const snippet = (elements.rawSnippets || [text.slice(0, 30)])[0] || text.slice(0, 20);
+
+      dirs.push({
+        title: '场景对比',
+        angle: `将「${place}」在两个不同时间/状态下的对比并置——同一个空间，不同的故事层叠在其中`,
+        opening: `${time}的${place}，和深夜的${place}，是完全不同的两个地方。白天有人，晚上有故事。`
+      });
+
+      dirs.push({
+        title: '时间跳跃',
+        angle: `以「${place}」为固定锚点，让时间在${time}前后跳跃——空间不变，人事全非`,
+        opening: `十年前的${place}，有个人在角落等人。十年后的${place}，那个人长大了，站在同一个角落。等人，或者等自己。`
+      });
+
+      dirs.push({
+        title: '视角切换',
+        angle: `从「${place}」中不同观察者的视角切入——同一场面，在不同人眼中是完全不同的故事`,
+        opening: `${place}里有三个人。每个人看到的都是不同的画面。而真相，藏在第四个人眼里。`
+      });
+
+      if (env) {
+        dirs.push({
+          title: '场景隐喻',
+          angle: `让「${place}」的${env}氛围成为人物内心的外化——环境即心理`,
+          opening: `${place}的${env}，像极了此刻的心情。${snippet}`
+        });
+      } else {
+        dirs.push({
+          title: '场景隐喻',
+          angle: `让「${place}」本身成为故事的隐喻——空间即叙事`,
+          opening: `${place}从来不是一个简单的${place}。它是一面镜子，每个走进来的人，都照出了自己最不想面对的那一面。`
+        });
+      }
+
+      dirs.push({
+        title: '空间叙事',
+        angle: `以「${place}」的不同区域/角落为叙事单元，每个空间角落藏着一个角色的故事碎片`,
+        opening: `${place}的每个角落都在说话。有些角落说等待，有些角落说告别，中间那把空椅子——它什么都没说，但它最吵。`
+      });
+
+      return dirs;
+    },
+
+    visual(elements, text, source, tags) {
+      const dirs = [];
+      const vis = elements.visuals || [{}];
+      const colors = vis.flatMap(v => v.colors || []);
+      const topColor = colors[0] || '某种颜色';
+      const actions = vis.flatMap(v => v.actions || []);
+      const topAction = actions[0] || '一个动作';
+      const snippet = (elements.rawSnippets || [text.slice(0, 30)])[0] || text.slice(0, 20);
+
+      dirs.push({
+        title: '视觉叙事',
+        angle: `用纯粹的视觉描写推进故事——让画面自己说话，${topColor}的反复出现暗示着一条暗线`,
+        opening: `${snippet}——这个画面定格了三秒。足够记住一辈子。`
+      });
+
+      dirs.push({
+        title: '通感描写',
+        angle: `打通视觉与其他感官——${topColor}不只是颜色，它有温度、有声音、有气味`,
+        opening: `那抹${topColor}，闻起来像旧书，摸起来像冷掉的咖啡，听起来像一句没说完的话。`
+      });
+
+      dirs.push({
+        title: '画面定格',
+        angle: `在最关键的瞬间按下暂停键——让一个画面承载全部的情感重量`,
+        opening: `时间停在了那一刻：${snippet}。后来发生的一切，都是从这三秒开始的。`
+      });
+
+      if (topAction && topAction !== '一个动作') {
+        dirs.push({
+          title: '动态画面',
+          angle: `用慢镜头拆解「${topAction}」这个动作——一秒钟的动作写出十秒的故事`,
+          opening: `${topAction}。这个动作被拆成了好几帧。前三帧是犹豫，中间是决绝，最后一帧——已经变了。`
+        });
+      }
+
+      dirs.push({
+        title: '色彩情绪',
+        angle: `让色彩成为情绪编码——${topColor}贯穿全文，每次出现都对应人物心理状态的变化`,
+        opening: `故事里反复出现${topColor}。第一次是窗帘，第二次是伤口，第三次——是墓碑上的字。`
+      });
+
+      return dirs;
+    },
+
+    plot(elements, text, source, tags) {
+      const dirs = [];
+      const plots = elements.plots || [{}];
+      const conflicts = plots.flatMap(p => p.conflicts || []);
+      const topConflict = conflicts[0] || '一个转折';
+      const turningPoint = plots.find(p => p.turningPoint);
+      const snippet = (elements.rawSnippets || [text.slice(0, 30)])[0] || text.slice(0, 20);
+      const locs = elements.locations || [{}];
+      const place = locs[0].place || '同一个地方';
+      const chars = elements.characters || [];
+
+      dirs.push({
+        title: '反转叙事',
+        angle: `围绕「${topConflict}」设计至少一次认知反转——前半段建立的认知，在结尾被彻底击碎`,
+        opening: `${snippet}——但如果你倒回去重读第一句，会发现真相一直写在脸上。`
+      });
+
+      if (chars.length >= 2 || (elements.locations || []).length >= 2) {
+        dirs.push({
+          title: '多线交织',
+          angle: `让不同角色/场景的线索平行推进，在某个节点碰撞——所有独立的线，最终系在同一个结上`,
+          opening: `两条故事线，一条向东，一条向西。他们以为永远不会相遇——直到在${place}撞见彼此。`
+        });
+      }
+
+      dirs.push({
+        title: '因果链',
+        angle: `从「${topConflict}」出发，逆向追溯因果——每一个"因为"都是上一个"所以"`,
+        opening: `一切的起因，是${snippet.slice(0, 6)}。这句话经过七次因果传递，变成了今天的一切。`
+      });
+
+      dirs.push({
+        title: '悬念设计',
+        angle: `在「${topConflict}」前后埋设悬念钩子——给读者一个问题，但不急着回答`,
+        opening: `${snippet}——这个问题的答案，藏在几个人的嘴里。但其中有些人，已经永远不会开口了。`
+      });
+
+      if (turningPoint) {
+        dirs.push({
+          title: '高潮设计',
+          angle: `将「${turningPoint.turningPoint}」作为情感与情节的双重引爆点`,
+          opening: `所有的线都收拢到那一刻。${snippet}——${turningPoint.turningPoint}`
+        });
+      }
+
+      return dirs;
+    },
+
+    other(elements, text, source, tags) {
+      const dirs = [];
+      const snippet = (elements.rawSnippets || [text.slice(0, 30)])[0] || text.slice(0, 20);
+      const elementScores = {
+        character: (elements.characters || []).length,
+        scene: (elements.locations || []).filter(l => l.place).length,
+        visual: (elements.visuals || []).filter(v => (v.colors || []).length > 0 || (v.actions || []).length > 0).length,
+        plot: (elements.plots || []).filter(p => (p.conflicts || []).length > 0 || p.turningPoint).length,
+      };
+      const sorted = Object.entries(elementScores).sort((a, b) => b[1] - a[1]);
+      const primary = sorted[0][0];
+      const secondary = sorted[1] && sorted[1][1] > 0 ? sorted[1][0] : 'scene';
+
+      const primaryDirs = (this.ANALYSIS_GENERATORS[primary] || this.ANALYSIS_GENERATORS.scene).call(this, elements, text, source, tags);
+      dirs.push(primaryDirs[0], primaryDirs[1]);
+
+      if (primary !== secondary) {
+        const secondaryDirs = (this.ANALYSIS_GENERATORS[secondary] || this.ANALYSIS_GENERATORS.scene).call(this, elements, text, source, tags);
+        dirs.push(secondaryDirs[0]);
+      } else {
+        dirs.push(primaryDirs[2] || primaryDirs[0]);
+      }
+
+      dirs.push({
+        title: '跨界融合',
+        angle: `将${this.TYPE_LABELS[primary]}与${this.TYPE_LABELS[secondary]}的元素混合——在一个故事中同时承载多个维度的深度`,
+        opening: `${snippet}——这句话里，藏着一个人，一个地方，和一段还没开始就已经结束的故事。`
+      });
+
+      return dirs;
+    },
+  },
+
+  // ===== 保存灵感 =====
+  add(source, text, tags, type) {
     if (!text.trim()) return;
-    const analysis = this.generateAnalysis(text, source, tags);
+    type = type || 'other';
+    const analysis = this.generateAnalysis(text, source, tags, type);
     const item = {
       id: uid(),
       text: text.trim(),
       source: source || '日常',
+      type,
       tags: tags || [],
       createdAt: new Date().toISOString(),
       analysis,
@@ -836,6 +1190,7 @@ const InspirationModule = {
     toast('✅ 灵感已保存，分析已生成');
   },
 
+  // ===== 删除 =====
   del(id) {
     this.items = this.items.filter(x => x.id !== id);
     this.selectedIds.delete(id);
@@ -845,11 +1200,13 @@ const InspirationModule = {
     toast('已删除');
   },
 
+  // ===== 展开/收起分析 =====
   toggleAnalysis(id) {
     this.activeAnalysisId = this.activeAnalysisId === id ? null : id;
     this.render();
   },
 
+  // ===== 多选 =====
   toggleSelect(id) {
     if (this.selectedIds.has(id)) { this.selectedIds.delete(id); }
     else { this.selectedIds.add(id); }
@@ -862,58 +1219,185 @@ const InspirationModule = {
     this.render();
   },
 
+  // ===== 组合分析 =====
+  findSharedElements(allElements, key) {
+    const counter = {};
+    allElements.forEach(item => {
+      const elems = item.elements[key] || [];
+      elems.forEach(e => {
+        const val = typeof e === 'string' ? e : (e.name || e.identity || e.place || e.time || e || '');
+        if (val) counter[val] = (counter[val] || 0) + 1;
+      });
+    });
+    return Object.entries(counter).filter(([k, v]) => v >= 2).map(([k]) => k);
+  },
+
+  generateComboConnections(allElements, typeCount) {
+    const conns = [];
+    const types = Object.keys(typeCount);
+    const typeLabels = types.map(t => this.TYPE_LABELS[t] || t);
+
+    if (types.length >= 2) {
+      conns.push(`这 ${allElements.length} 条灵感跨越了「${typeLabels.join('、')}」等不同维度，天然适合构建一个多层面的故事——每条灵感负责一个叙事层面。`);
+    }
+
+    const sharedLocs = this.findSharedElements(allElements, 'locations');
+    if (sharedLocs.length > 0) {
+      conns.push(`场景元素（${sharedLocs.slice(0, 3).join('、')}）在多条灵感中重叠——可以以这个空间为叙事枢纽，让不同角色的故事线在此交汇。`);
+    }
+
+    const sharedEmotions = this.findSharedElements(allElements, 'emotions');
+    if (sharedEmotions.length > 0) {
+      conns.push(`情感基调（${sharedEmotions.slice(0, 3).join('、')}）的一致性暗示了一个统一的情绪主题——可以用这个主题串联所有片段。`);
+    }
+
+    const allTags = [...new Set(allElements.flatMap(e => e.tags || []))];
+    if (allTags.length >= 3) {
+      conns.push(`标签交集「${allTags.slice(0, 5).join('、')}」提示你目前关注的方向，可以尝试将这些元素融合进一个故事中。`);
+    }
+
+    if (typeCount.character && typeCount.scene) {
+      conns.push(`「人设+场景」的组合是故事的最小完整单元——把人物放进场景，冲突会自然生长。`);
+    }
+    if (typeCount.plot && typeCount.character) {
+      conns.push(`「情节+人设」的组合可以构建角色弧线——让情节事件成为人物转变的催化剂。`);
+    }
+    if (typeCount.visual && typeCount.plot) {
+      conns.push(`「画面+情节」的组合适合做电影感短篇——用视觉细节暗示情节走向，让读者自己"看到"转折。`);
+    }
+
+    return conns;
+  },
+
+  generateComboFusions(allElements, typeCount) {
+    const fusions = [];
+    const hasChar = !!typeCount.character;
+    const hasScene = !!typeCount.scene;
+    const hasVisual = !!typeCount.visual;
+    const hasPlot = !!typeCount.plot;
+
+    if (hasChar && hasScene) {
+      const charItem = allElements.find(e => e.type === 'character');
+      const sceneItem = allElements.find(e => e.type === 'scene');
+      const charName = (charItem && charItem.elements && charItem.elements.characters && charItem.elements.characters[0])
+        ? (charItem.elements.characters[0].name || charItem.elements.characters[0].identity || '主角') : '主角';
+      const place = (sceneItem && sceneItem.elements && sceneItem.elements.locations && sceneItem.elements.locations[0])
+        ? (sceneItem.elements.locations[0].place || '这个场景') : '这个场景';
+      fusions.push(`将「${charName}」放进「${place}」——让这个人与这个空间产生摩擦，冲突会从环境、人际、记忆三个层面同时生长。`);
+    }
+
+    if (hasChar && hasPlot) {
+      const charItem = allElements.find(e => e.type === 'character');
+      const plotItem = allElements.find(e => e.type === 'plot');
+      const topTrait = (charItem && charItem.elements && charItem.elements.characters && charItem.elements.characters[0] && charItem.elements.characters[0].traits)
+        ? (charItem.elements.characters[0].traits[0] || '核心特质') : '核心特质';
+      const topConflict = (plotItem && plotItem.elements && plotItem.elements.plots && plotItem.elements.plots[0] && plotItem.elements.plots[0].conflicts)
+        ? (plotItem.elements.plots[0].conflicts[0] || '核心转折') : '核心转折';
+      fusions.push(`让角色「${topTrait}」的特质与情节「${topConflict}」形成因果——正是因为有这个特质，才会在这个转折处做出那个选择。`);
+    }
+
+    if (hasVisual) {
+      const visualItem = allElements.find(e => e.type === 'visual');
+      const topColor = (visualItem && visualItem.elements && visualItem.elements.visuals && visualItem.elements.visuals[0] && visualItem.elements.visuals[0].colors)
+        ? (visualItem.elements.visuals[0].colors[0] || '视觉意象') : '视觉意象';
+      fusions.push(`用「${topColor}」这个视觉意象作为全文的叙事暗线——它每次出现都对应情节或心理的一次位移，形成视觉-情绪-情节的三重共振。`);
+    }
+
+    const allEmotions = allElements.flatMap(e => (e.elements && e.elements.emotions) ? e.elements.emotions : []);
+    if (allEmotions.length > 0) {
+      fusions.push(`提取所有灵感的情感内核——「${allEmotions[0]}」——用这个情感主题串联多个独立片段，做成一组同题异构的短篇合集。`);
+    }
+
+    if (allElements.length >= 3) {
+      fusions.push(`将每条灵感的核心角色提取出来，构建一个群像——他们彼此不认识，但被同一个事件暗中连接，结尾揭示关联。`);
+    }
+
+    return fusions.slice(0, 4);
+  },
+
+  generateComboFrameworks(allElements, typeCount) {
+    const frameworks = [];
+    const n = allElements.length;
+    const types = Object.keys(typeCount);
+    const sharedLoc = this.findSharedElements(allElements, 'locations')[0];
+    const sharedEmo = this.findSharedElements(allElements, 'emotions')[0];
+    const linkElement = sharedLoc || sharedEmo || '一个未揭示的事件';
+
+    frameworks.push({
+      title: '多线汇聚',
+      desc: `开头分别展开 ${n} 条线索，每条灵感对应一个独立视角/角色线。通过「${linkElement}」将所有线索暗中连接。结尾揭示这些线交汇的真相，制造"原来如此"的顿悟感。`
+    });
+
+    if (types.length >= 2) {
+      const typeRoles = types.map(t => {
+        if (t === 'character') return '人设灵感→主角的内在深度';
+        if (t === 'scene') return '场景灵感→主角所处的世界';
+        if (t === 'visual') return '画面灵感→关键场景的呈现方式';
+        if (t === 'plot') return '情节灵感→主线事件走向';
+        return '其他灵感→补充维度';
+      });
+      frameworks.push({
+        title: '维度分工',
+        desc: `按灵感类型分配叙事职能：${typeRoles.join('；')}。让每条灵感各司其职，避免功能重叠，在短篇幅内实现最大信息密度。`
+      });
+    }
+
+    frameworks.push({
+      title: '时间交错',
+      desc: `将 ${n} 条灵感分配到不同时间节点（过去/现在/未来），用非线性叙事让读者在不同时间线穿梭。建议：人设灵感放过去（交代来路），情节灵感放现在（冲突爆发），画面/场景灵感穿插其中作为"时间锚点"。`
+    });
+
+    return frameworks.slice(0, 3);
+  },
+
   generateComboAnalysis() {
     const selected = this.items.filter(i => this.selectedIds.has(i.id));
     if (selected.length < 2) { toast('请至少选择 2 条灵感进行组合分析'); return; }
-    const allText = selected.map(i => i.text).join(' ');
-    const allTags = [...new Set(selected.flatMap(i => i.tags))];
-    const allSources = [...new Set(selected.map(i => i.source))];
-    const connections = [];
-    const rule = this._matchKeywords(allText);
-    if (rule) { connections.push(`这些灵感都涉及「${rule.keywords.slice(0, 3).join('、')}」等元素，可以围绕这一核心领域展开叙事。`); }
-    if (allTags.length >= 3) { connections.push(`标签交集「${allTags.slice(0, 5).join('、')}」提示你目前关注的方向，可以尝试将这些元素融合进一个故事中。`); }
-    if (selected.length >= 3) { connections.push(`多条灵感的组合暗示了一个更大的叙事宇宙——也许每一条灵感都是一个独立角色的故事线，最终汇聚到一个共同事件中。`); }
-    connections.push(`从「${allSources.join('、')}」等不同来源获得的灵感可以互补：将不同场景/人物类型的素材融合，往往能产生最独特的化学反应。`);
-    const fusions = [
-      '将灵感A的人物设定 + 灵感B的场景设定 + 灵感C的核心冲突，构建一个完整的三幕短篇',
-      '以灵感A为世界观基底，灵感B为主线情节，灵感C的角色群像点缀其中',
-      '提取所有灵感的情感内核，用同一个情感主题串联多个独立场景，做成"片段集锦"式短篇',
-      '将各灵感中的"反常元素"提取出来，集中到同一个角色身上，创造一个极度复杂的角色',
-    ];
-    const frameworks = [
-      { title: '多线汇聚', desc: `开头分别展开 ${selected.length} 条线索，每条线索对应一条灵感，中间通过一个共同事件（如一个地点、一个人物、一个日期）将所有人串联起来，结尾揭示这些线索之间的隐藏关联。` },
-      { title: '时间交错', desc: `将 ${selected.length} 条灵感分配到不同的时间节点（过去/现在/未来），用非线性叙事让读者在不同时间线中穿梭，逐渐拼凑出完整的故事图景。` },
-      { title: '主题变奏', desc: `确定一个核心主题（如"失去"或"重逢"），每条灵感作为这个主题的一个变奏版本，构成一组"同题异构"的微小说合集。` },
-    ];
+
+    const typeCount = {};
+    const allElements = [];
+    selected.forEach(i => {
+      const type = i.type || 'other';
+      typeCount[type] = (typeCount[type] || 0) + 1;
+      const elements = (i.analysis && i.analysis.elements) ? i.analysis.elements : this.summarizeElements(this.extractElements(i.text));
+      allElements.push({ id: i.id, type, elements, text: i.text, source: i.source, tags: i.tags || [] });
+    });
+
+    const connections = this.generateComboConnections(allElements, typeCount);
+    const fusions = this.generateComboFusions(allElements, typeCount);
+    const frameworks = this.generateComboFrameworks(allElements, typeCount);
+
     this.comboAnalysisResult = { connections, fusions, frameworks, selectedCount: selected.length };
     this.render();
   },
 
+  // ===== 渲染 =====
   render() {
     const wrap = document.getElementById('content');
     const sources = ['日常', '梦境', '阅读', '影视', '对话', '旅行', '社交媒体', '其他'];
-    const activeItem = this.activeAnalysisId ? this.items.find(i => i.id === this.activeAnalysisId) : null;
+
     let html = '';
-
-
 
     // Input area
     html += `<div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span><span class="dot"></span>记录创作灵感</span>
-      </div>
+      <div class="card-title"><span><span class="dot"></span>记录创作灵感</span></div>
       <div class="input-group"><label>灵感内容</label>
         <textarea id="inspoText" placeholder="记录你的灵感碎片…&#10;&#10;示例：&#10;一个每天凌晨三点起床在便利店打工的年轻女孩，她喜欢在收银台下面藏一本诗集，没人的时候偷偷读两句…" rows="4"></textarea>
       </div>
       <div class="input-group" style="display:flex;gap:10px;">
+        <div style="flex:1;"><label>分类</label>
+          <select id="inspoType" style="width:100%;padding:10px 14px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--radius-xs);font-size:14px;color:var(--c-text);">
+            ${this.TYPE_OPTIONS.map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
+          </select>
+        </div>
         <div style="flex:1;"><label>来源</label>
           <select id="inspoSource" style="width:100%;padding:10px 14px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--radius-xs);font-size:14px;color:var(--c-text);">
             ${sources.map(s => `<option value="${s}">${s}</option>`).join('')}
           </select>
         </div>
-        <div style="flex:2;"><label>标签（逗号分隔）</label>
-          <input type="text" id="inspoTags" placeholder="如：治愈、深夜、孤独、都市" maxlength="100">
-        </div>
+      </div>
+      <div class="input-group"><label>标签（逗号分隔）</label>
+        <input type="text" id="inspoTags" placeholder="如：治愈、深夜、孤独、都市" maxlength="100">
       </div>
       <button class="btn btn-primary btn-block" id="saveInspo">💾 保存灵感并生成延伸分析</button>
     </div>`;
@@ -949,11 +1433,13 @@ const InspirationModule = {
         const isSelected = this.selectedIds.has(i.id);
         const isAnalysisOpen = this.activeAnalysisId === i.id;
         const tagStr = (i.tags || []).map(t => `#${escapeHTML(t)}`).join(' ');
+        const typeLabel = this.TYPE_LABELS[i.type] || '其他';
         let card = `<div class="inspo-card-v2 ${isAnalysisOpen ? 'analysis-open' : ''}">
           <div class="inspo-row-top">
             <label class="inspo-checkbox" title="选择此灵感"><input type="checkbox" ${isSelected ? 'checked' : ''} data-select-id="${i.id}"><span class="checkmark"></span></label>
             <div class="inspo-body">
               <div class="inspo-meta">
+                <span class="i-type ${i.type || 'other'}">${escapeHTML(typeLabel)}</span>
                 <span class="inspo-source-tag">📌 ${escapeHTML(i.source)}</span>
                 <span class="inspo-date">${escapeHTML(formatDateCN(i.createdAt.slice(0,10)))}</span>
               </div>
@@ -964,7 +1450,6 @@ const InspirationModule = {
           </div>
           <div class="inspo-actions">
             <button class="btn btn-ghost inspo-action-btn" data-analysis-id="${i.id}">${isAnalysisOpen ? '▲ 收起分析' : '📍 展开分析'}</button>
-
           </div>`;
 
         if (isAnalysisOpen && i.analysis) {
@@ -977,7 +1462,6 @@ const InspirationModule = {
               <div class="direction-opening">✍️ ${escapeHTML(d.opening)}</div>
             </div>`).join('')}
           </div>`;
-
         }
 
         card += `</div>`;
@@ -999,9 +1483,10 @@ const InspirationModule = {
       const text = document.getElementById('inspoText').value;
       if (!text.trim()) { toast('请输入灵感内容'); return; }
       const source = document.getElementById('inspoSource').value;
+      const type = document.getElementById('inspoType').value;
       const tagsStr = document.getElementById('inspoTags').value;
       const tags = tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
-      this.add(source, text, tags);
+      this.add(source, text, tags, type);
       document.getElementById('inspoText').value = '';
       document.getElementById('inspoTags').value = '';
     };
@@ -1787,7 +2272,7 @@ const TrendingModule = {
 
 /* ===== 模块切换 ===== */
 const MODULES={
-  inspiration:{title:'灵感记录',render:()=>InspirationModule.render(),tag:'人设 · 场景 · 情节'},
+  inspiration:{title:'灵感记录',render:()=>InspirationModule.render(),tag:'人设 · 场景 · 画面 · 情节'},
   essay:{title:'随笔收藏',render:()=>EssayModule.render(),tag:'分析 · 拆解 · 学习'},
   data:{title:'数据复盘',render:()=>DataModule.render(),tag:'数据 · 诊断 · 优化'},
   trending:{title:'每日热文',render:()=>TrendingModule.render(),tag:'短篇 · 题材 · 趋势'}
