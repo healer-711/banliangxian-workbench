@@ -147,12 +147,14 @@ ul{list-style:none;}
 .header{
   padding:14px 20px 12px;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  background:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.85);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
   border-bottom:1px solid var(--c-border-soft);
   flex-shrink:0;
-  z-index:5;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 .header-left{display:flex;align-items:center;gap:10px;min-width:0;}
 .header-menu-btn{
@@ -361,6 +363,22 @@ ul{list-style:none;}
 .hot-card .h-author{font-size:12px;color:var(--c-blue-600);margin-bottom:6px;}
 .hot-card .h-excerpt{font-size:13px;color:var(--c-text-light);line-height:1.7;margin-bottom:8px;padding:8px 10px;background:var(--c-blue-50);border-radius:8px;}
 .hot-card .h-inspire{font-size:12px;color:#4a5e4d;padding:6px 10px;background:var(--c-green-50);border-radius:8px;line-height:1.6;}
+
+/* ===== 素材库 Tab 切换 ===== */
+.sub-tabs{
+  display:flex;gap:0;margin-bottom:16px;
+  background:var(--c-bg);border-radius:12px;padding:4px;
+}
+.sub-tab{
+  flex:1;padding:10px 16px;border-radius:10px;
+  font-size:14px;font-weight:500;color:var(--c-text-muted);
+  text-align:center;cursor:pointer;transition:all .25s;
+  border:none;background:transparent;
+}
+.sub-tab.active{
+  background:var(--c-card);color:var(--c-blue-600);
+  box-shadow:var(--c-shadow);font-weight:600;
+}
 
 /* ===== 仿写 ===== */
 .imitate-item{
@@ -619,10 +637,6 @@ ul{list-style:none;}
       <div class="nav-item" data-module="material">
         <div class="nav-icon">✨</div>
         <span class="nav-label">文笔素材库</span>
-      </div>
-      <div class="nav-item" data-module="imitate">
-        <div class="nav-icon">✍️</div>
-        <span class="nav-label">文笔仿写</span>
       </div>
       <div class="nav-item" data-module="review">
         <div class="nav-icon">📊</div>
@@ -1055,13 +1069,16 @@ const PlanModule = {
   }
 };
 
-/* ---------- 模块2：文笔素材库 ---------- */
+/* ---------- 模块2：文笔素材库（含仿写） ---------- */
 const MaterialModule = {
   materials:[],
   hotPosts:[],
+  imitates:[],
+  currentTab:'material',
   init(){
     this.materials=Store.get('materials',[]);
     this.hotPosts=this.generateHotPosts();
+    this.imitates=Store.get('imitates',[]);
   },
   generateHotPosts(){
     // 基于阅读写作赛道的模拟热帖推荐
@@ -1091,9 +1108,58 @@ const MaterialModule = {
     Store.set('materials',this.materials);
     this.render();
   },
+  addImitate(original,mine,tags){
+    this.imitates.unshift({
+      id:uid(),
+      original:original.trim(),
+      mine:mine.trim(),
+      tags:tags||['todo'],
+      date:todayStr(),
+      ts:Date.now()
+    });
+    Store.set('imitates',this.imitates);
+    this.render();
+  },
+  delImitate(id){
+    this.imitates=this.imitates.filter(x=>x.id!==id);
+    Store.set('imitates',this.imitates);
+    this.render();
+  },
+  toggleImitateTag(id){
+    const it=this.imitates.find(x=>x.id===id);
+    if(!it)return;
+    it.tags = it.tags.includes('done')?['todo']:['done'];
+    Store.set('imitates',this.imitates);
+    this.render();
+  },
+  switchTab(tab){
+    this.currentTab=tab;
+    this.render();
+  },
   render(){
     const wrap=document.getElementById('content');
     wrap.innerHTML=`
+      <div class="sub-tabs">
+        <button class="sub-tab ${this.currentTab==='material'?'active':''}" data-tab="material">✨ 素材收藏</button>
+        <button class="sub-tab ${this.currentTab==='imitate'?'active':''}" data-tab="imitate">✍️ 仿写练习</button>
+      </div>
+      ${this.currentTab==='material'?this._renderMaterialTab():this._renderImitateTab()}
+    `;
+
+    // 绑定 tab 切换
+    wrap.querySelectorAll('.sub-tab').forEach(b=>{
+      b.onclick=()=>this.switchTab(b.dataset.tab);
+    });
+
+    // 绑定当前 tab 的事件
+    if(this.currentTab==='material'){
+      this._bindMaterialEvents(wrap);
+    }else{
+      this._bindImitateEvents(wrap);
+    }
+  },
+  _renderMaterialTab(){
+    return `
       <div class="card">
         <div class="card-title"><span class="dot"></span>记录触动我的文字</div>
         <div class="input-group">
@@ -1131,69 +1197,47 @@ const MaterialModule = {
         `).join(''):'<div class="empty"><div class="icon">✨</div><div class="text">还没有收藏的素材，开始记录那些打动你的文字吧</div></div>'}
       </div>
     `;
-
-    document.getElementById('saveMaterial').onclick=()=>{
-      const q=document.getElementById('mQuote').value;
-      if(!q.trim()){toast('请先输入金句内容');return;}
-      this.addMaterial(q,document.getElementById('mSource').value,document.getElementById('mInspire').value);
-      toast('已收藏到素材库');
-      document.getElementById('mQuote').value='';
-      document.getElementById('mSource').value='';
-      document.getElementById('mInspire').value='';
-    };
-
-    document.getElementById('collectHot').onclick=()=>{
-      const card=document.getElementById('hotCard');
-      const list=document.getElementById('hotList');
-      card.style.display='block';
-      // 随机抽取3条
-      const shuffled=[...this.hotPosts].sort(()=>Math.random()-.5).slice(0,3);
-      list.innerHTML=shuffled.map(h=>`
-        <div class="hot-card">
-          <div class="h-title">${escapeHTML(h.title)}</div>
-          <div class="h-author">${escapeHTML(h.author)} · 👍 ${escapeHTML(h.likes)}</div>
-          <div class="h-excerpt">${escapeHTML(h.excerpt)}</div>
-          <div class="h-inspire">💡 写作启发：${escapeHTML(h.inspire)}</div>
-        </div>
-      `).join('')+`<div style="text-align:center;font-size:12px;color:var(--c-text-muted);padding:8px;">数据为模拟推荐，仅作灵感参考</div>`;
-      card.scrollIntoView({behavior:'smooth',block:'start'});
-      toast('已采集 '+shuffled.length+' 条热帖灵感');
-    };
-
-    document.querySelectorAll('.m-del').forEach(b=>b.onclick=()=>this.delMaterial(b.dataset.id));
-  }
-};
-
-/* ---------- 模块3：文笔仿写 ---------- */
-const ImitateModule = {
-  items:[],
-  init(){this.items=Store.get('imitates',[]);},
-  add(original,mine,tags){
-    this.items.unshift({
-      id:uid(),
-      original:original.trim(),
-      mine:mine.trim(),
-      tags:tags||['todo'],
-      date:todayStr(),
-      ts:Date.now()
-    });
-    Store.set('imitates',this.items);
-    this.render();
   },
-  del(id){this.items=this.items.filter(x=>x.id!==id);Store.set('imitates',this.items);this.render();},
-  toggleTag(id){
-    const it=this.items.find(x=>x.id===id);
-    if(!it)return;
-    it.tags = it.tags.includes('done')?['todo']:['done'];
-    Store.set('imitates',this.items);
-    this.render();
-  },
-  render(){
-    const wrap=document.getElementById('content');
-    const todoCount=this.items.filter(x=>x.tags.includes('todo')).length;
-    const doneCount=this.items.filter(x=>x.tags.includes('done')).length;
+  _bindMaterialEvents(wrap){
+    const saveBtn=wrap.querySelector('#saveMaterial');
+    if(saveBtn){
+      saveBtn.onclick=()=>{
+        const q=document.getElementById('mQuote').value;
+        if(!q.trim()){toast('请先输入金句内容');return;}
+        this.addMaterial(q,document.getElementById('mSource').value,document.getElementById('mInspire').value);
+        toast('已收藏到素材库');
+        document.getElementById('mQuote').value='';
+        document.getElementById('mSource').value='';
+        document.getElementById('mInspire').value='';
+      };
+    }
 
-    wrap.innerHTML=`
+    const collectBtn=wrap.querySelector('#collectHot');
+    if(collectBtn){
+      collectBtn.onclick=()=>{
+        const card=document.getElementById('hotCard');
+        const list=document.getElementById('hotList');
+        card.style.display='block';
+        const shuffled=[...this.hotPosts].sort(()=>Math.random()-.5).slice(0,3);
+        list.innerHTML=shuffled.map(h=>`
+          <div class="hot-card">
+            <div class="h-title">${escapeHTML(h.title)}</div>
+            <div class="h-author">${escapeHTML(h.author)} · 👍 ${escapeHTML(h.likes)}</div>
+            <div class="h-excerpt">${escapeHTML(h.excerpt)}</div>
+            <div class="h-inspire">💡 写作启发：${escapeHTML(h.inspire)}</div>
+          </div>
+        `).join('')+`<div style="text-align:center;font-size:12px;color:var(--c-text-muted);padding:8px;">数据为模拟推荐，仅作灵感参考</div>`;
+        card.scrollIntoView({behavior:'smooth',block:'start'});
+        toast('已采集 '+shuffled.length+' 条热帖灵感');
+      };
+    }
+
+    wrap.querySelectorAll('.m-del').forEach(b=>b.onclick=()=>this.delMaterial(b.dataset.id));
+  },
+  _renderImitateTab(){
+    const todoCount=this.imitates.filter(x=>x.tags.includes('todo')).length;
+    const doneCount=this.imitates.filter(x=>x.tags.includes('done')).length;
+    return `
       <div class="card">
         <div class="card-title"><span class="dot"></span>新建仿写练习</div>
         <div class="input-group">
@@ -1210,11 +1254,11 @@ const ImitateModule = {
       <div class="card">
         <div class="card-title"><span class="dot"></span>练习档案</div>
         <div class="stats-grid">
-          <div class="stat-mini"><div class="num">${this.items.length}</div><div class="label">总练习</div></div>
+          <div class="stat-mini"><div class="num">${this.imitates.length}</div><div class="label">总练习</div></div>
           <div class="stat-mini"><div class="num" style="color:#8b7355;">${todoCount}</div><div class="label">待练习</div></div>
           <div class="stat-mini"><div class="num green">${doneCount}</div><div class="label">已掌握</div></div>
         </div>
-        ${this.items.length?this.items.map(it=>`
+        ${this.imitates.length?this.imitates.map(it=>`
           <div class="imitate-item">
             <div class="im-section">
               <span class="im-label original">📖 原文</span>
@@ -1236,27 +1280,31 @@ const ImitateModule = {
         `).join(''):'<div class="empty"><div class="icon">✍️</div><div class="text">还没有仿写练习，找一段喜欢的文字开始模仿吧</div></div>'}
       </div>
     `;
+  },
+  _bindImitateEvents(wrap){
+    const saveBtn=wrap.querySelector('#saveImitate');
+    if(saveBtn){
+      saveBtn.onclick=()=>{
+        const o=document.getElementById('imOriginal').value;
+        const m=document.getElementById('imMine').value;
+        if(!o.trim()||!m.trim()){toast('请填写原文和仿写内容');return;}
+        this.addImitate(o,m,['todo']);
+        toast('练习已保存');
+        document.getElementById('imOriginal').value='';
+        document.getElementById('imMine').value='';
+      };
+    }
 
-    document.getElementById('saveImitate').onclick=()=>{
-      const o=document.getElementById('imOriginal').value;
-      const m=document.getElementById('imMine').value;
-      if(!o.trim()||!m.trim()){toast('请填写原文和仿写内容');return;}
-      this.add(o,m,['todo']);
-      toast('练习已保存');
-      document.getElementById('imOriginal').value='';
-      document.getElementById('imMine').value='';
-    };
-
-    document.querySelectorAll('.imitate-item button').forEach(b=>{
+    wrap.querySelectorAll('.imitate-item button').forEach(b=>{
       b.onclick=()=>{
-        if(b.dataset.action==='toggle')this.toggleTag(b.dataset.id);
-        else if(b.dataset.action==='del')this.del(b.dataset.id);
+        if(b.dataset.action==='toggle')this.toggleImitateTag(b.dataset.id);
+        else if(b.dataset.action==='del')this.delImitate(b.dataset.id);
       };
     });
   }
 };
 
-/* ---------- 模块4：内容复盘 ---------- */
+/* ---------- 模块3：内容复盘 ---------- */
 const ReviewModule = {
   items:[],
   init(){this.items=Store.get('reviews',[]);},
@@ -2119,8 +2167,7 @@ const TopicResearch = {
 /* ===== 模块切换 ===== */
 const MODULES={
   plan:{title:'每日读写计划',render:()=>PlanModule.render(),tag:'阅读 · 写作 · 成长'},
-  material:{title:'文笔素材库',render:()=>MaterialModule.render(),tag:'金句 · 灵感 · 积累'},
-  imitate:{title:'文笔仿写练习',render:()=>ImitateModule.render(),tag:'模仿 · 创造 · 精进'},
+  material:{title:'文笔素材库',render:()=>MaterialModule.render(),tag:'金句 · 仿写 · 积累'},
   review:{title:'内容复盘',render:()=>ReviewModule.render(),tag:'数据 · 诊断 · 优化'},
   reading:{title:'阅读清单',render:()=>ReadingModule.render(),tag:'书单 · 进度 · 感悟'},
   research:{title:'选题研究',render:()=>TopicResearch.autoShow(),tag:'搜索 · 分析 · 洞察'}
@@ -2190,7 +2237,6 @@ function init(){
   updateHeaderDate();
   setupSidebar();
   MaterialModule.init();
-  ImitateModule.init();
   ReviewModule.init();
   ReadingModule.init();
   TopicResearch.init();
